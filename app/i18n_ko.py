@@ -1,6 +1,16 @@
 """Korean copy for the browser edition (same glossary keys as app/english.py). The Japanese source stays authoritative."""
 
 BODY = {
+    '通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。': '일반 브라우저 편집에서는 가사와 곡이 이 기기 안에서 처리되며 서버로 전송되지 않습니다. AI MV 편곡 제안을 사용할 때는 명시적으로 동의한 경우에만 가사와 로컬에서 추출한 음악 특징을 OpenAI API로 전송합니다. 오디오·영상 파일과 파일 경로는 전송하지 않습니다.',
+    'AI MV Motion Graphics Engine（単曲 MVP）': 'AI MV Motion Graphics Engine (싱글곡 MVP)',
+    '外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。': '외부에서 생성한 배경 영상을 가져와 MV 프로젝트 폴더를 만듭니다. AI 편곡 제안은 로컬 도구에서 생성한 뒤 불러와 섹션, 스타일, 샷을 검토할 수 있습니다. 마지막으로 투명 프레임을 내보내 FFmpeg로 합성합니다.',
+    '背景動画（複数選択可）': '배경 영상 (여러 개 선택 가능)',
+    'MV プロジェクトフォルダーを作成': 'MV 프로젝트 폴더 만들기',
+    'MV プロジェクトフォルダーを開く': 'MV 프로젝트 폴더 열기',
+    'AI 提案 JSON を読み込む': 'AI 제안 JSON 불러오기',
+    'タイムラインを承認して保存': '타임라인 승인 후 저장',
+    'プロジェクトに透過レイヤーを書き出す': '프로젝트에 투명 레이어 내보내기',
+    'ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。': '로컬 명령: <code>python3 tools/mv_engine.py keychain-set</code>으로 API 키를 macOS Keychain에 저장하세요. AI 제안을 요청할 때는 <code>--consent-lyrics-features</code>를 붙이고, 합성에는 <code>--approved</code>가 필요합니다. 곡과 영상은 프로젝트 폴더에 복사되며 AI 요청에는 미디어 파일이나 경로가 포함되지 않습니다.',
     '文字PV系の部品を使う': '타이포그래피 부품 사용',
     'キネティックの部品を使う': '키네틱 부품 사용',
     'ホラーの演出も使う': '호러 연출도 사용',

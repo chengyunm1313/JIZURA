@@ -1,6 +1,16 @@
 """Traditional Chinese (Taiwan) copy for the browser edition. Same glossary keys as app/english.py."""
 
 BODY = {
+    '通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。': '一般瀏覽器編輯時，歌詞與歌曲都在這台裝置上處理，不會傳送至伺服器。使用 AI MV 編排建議時，只有在明確同意後，才會將歌詞與本機抽取的音樂特徵傳送至 OpenAI API；不會傳送音訊、影片檔或檔案路徑。',
+    'AI MV Motion Graphics Engine（単曲 MVP）': 'AI MV Motion Graphics Engine（單曲 MVP）',
+    '外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。': '匯入外部生成的背景影片，建立 MV 專案資料夾。AI 編排建議由本機工具產生，載入後可檢查段落、風格與鏡頭。最後輸出透明影格，再以 FFmpeg 合成。',
+    '背景動画（複数選択可）': '背景影片（可多選）',
+    'MV プロジェクトフォルダーを作成': '建立 MV 專案資料夾',
+    'MV プロジェクトフォルダーを開く': '開啟 MV 專案資料夾',
+    'AI 提案 JSON を読み込む': '載入 AI 建議 JSON',
+    'タイムラインを承認して保存': '核准並儲存時間軸',
+    'プロジェクトに透過レイヤーを書き出す': '輸出透明圖層至專案',
+    'ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。': '本機指令：以 <code>python3 tools/mv_engine.py keychain-set</code> 將 API 金鑰存入 macOS Keychain。產生 AI 建議時須加上 <code>--consent-lyrics-features</code>；合成時須加上 <code>--approved</code>。歌曲與影片會複製到專案資料夾；AI 請求不會附上媒體檔或檔案路徑。',
     '文字PV系の部品を使う': '使用文字排版部件',
     'キネティックの部品を使う': '使用動態文字部件',
     'ホラーの演出も使う': '也使用恐怖特效',

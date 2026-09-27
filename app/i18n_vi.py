@@ -42,6 +42,16 @@ STYLES = {
 }
 
 BODY = {
+    '通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。': 'Khi chỉnh sửa thông thường trong trình duyệt, lời bài hát và nhạc được xử lý trên thiết bị này và không gửi lên máy chủ. Yêu cầu đề xuất phối cảnh AI MV chỉ gửi lời bài hát và đặc trưng âm thanh được trích xuất cục bộ đến OpenAI API khi bạn đồng ý rõ ràng. Tệp âm thanh/video và đường dẫn tệp sẽ không được gửi.',
+    'AI MV Motion Graphics Engine（単曲 MVP）': 'AI MV Motion Graphics Engine (MVP một bài hát)',
+    '外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。': 'Nhập các video nền được tạo bên ngoài để lập thư mục dự án MV. Công cụ cục bộ tạo đề xuất phối cảnh AI; sau khi tải vào, bạn có thể xem lại đoạn nhạc, phong cách và cảnh quay. Cuối cùng, xuất các khung hình trong suốt rồi ghép bằng FFmpeg.',
+    '背景動画（複数選択可）': 'Video nền (có thể chọn nhiều tệp)',
+    'MV プロジェクトフォルダーを作成': 'Tạo thư mục dự án MV',
+    'MV プロジェクトフォルダーを開く': 'Mở thư mục dự án MV',
+    'AI 提案 JSON を読み込む': 'Tải JSON đề xuất AI',
+    'タイムラインを承認して保存': 'Duyệt và lưu dòng thời gian',
+    'プロジェクトに透過レイヤーを書き出す': 'Xuất lớp trong suốt vào dự án',
+    'ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。': 'Lệnh cục bộ: lưu khóa API vào macOS Keychain bằng <code>python3 tools/mv_engine.py keychain-set</code>. Thêm <code>--consent-lyrics-features</code> để yêu cầu AI đề xuất; cần <code>--approved</code> để kết xuất. Bài hát và video được sao chép vào thư mục dự án. Yêu cầu AI không gửi tệp phương tiện hoặc đường dẫn.',
     '文字PV系の部品を使う': 'Dùng các thành phần kiểu chữ',
     'キネティックの部品を使う': 'Dùng các thành phần chuyển động chữ',
     'ホラーの演出も使う': 'Dùng cả hiệu ứng kinh dị',

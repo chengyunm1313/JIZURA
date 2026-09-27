@@ -41,6 +41,16 @@ STYLES = {
 }
 
 BODY = {
+    '通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。': 'Dalam penyuntingan browser biasa, lirik dan lagu diproses di perangkat ini dan tidak dikirim ke server. Permintaan aransemen AI MV opsional hanya mengirim lirik dan fitur audio yang diekstrak secara lokal ke OpenAI API setelah Anda menyetujuinya secara eksplisit. File audio/video dan jalur file tidak dikirim.',
+    'AI MV Motion Graphics Engine（単曲 MVP）': 'AI MV Motion Graphics Engine (MVP satu lagu)',
+    '外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。': 'Impor video latar yang dibuat di luar aplikasi untuk membuat folder proyek MV. Saran aransemen AI dibuat dengan alat lokal; setelah dimuat, Anda dapat meninjau bagian, gaya, dan shot. Terakhir, ekspor frame transparan lalu gabungkan dengan FFmpeg.',
+    '背景動画（複数選択可）': 'Video latar (pilih beberapa)',
+    'MV プロジェクトフォルダーを作成': 'Buat folder proyek MV',
+    'MV プロジェクトフォルダーを開く': 'Buka folder proyek MV',
+    'AI 提案 JSON を読み込む': 'Muat JSON saran AI',
+    'タイムラインを承認して保存': 'Setujui dan simpan timeline',
+    'プロジェクトに透過レイヤーを書き出す': 'Ekspor layer transparan ke proyek',
+    'ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。': 'Perintah lokal: simpan kunci API ke macOS Keychain dengan <code>python3 tools/mv_engine.py keychain-set</code>. Tambahkan <code>--consent-lyrics-features</code> untuk meminta saran AI; rendering memerlukan <code>--approved</code>. Lagu dan video disalin ke folder proyek. Permintaan AI tidak menyertakan file media atau jalurnya.',
     '文字PV系の部品を使う': 'Pakai bagian tipografi',
     'キネティックの部品を使う': 'Pakai bagian kinetik',
     'ホラーの演出も使う': 'Sertakan efek horor',

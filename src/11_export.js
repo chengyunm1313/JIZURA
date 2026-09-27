@@ -247,7 +247,7 @@ J.exportPNGZip = async ({ plan, project, transparent, layers, onProgress, signal
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
   const R = new J.Renderer();
-  const fps = plan.fps, total = Math.max(1, Math.round(span.dur * fps));
+  const fps = plan.fps, total = Math.max(1, Math.ceil(span.dur * fps));
   const zip = new ZipWriter();
   const scale = w / plan.W;
   for (let i = 0; i < total; i += every) {
@@ -262,6 +262,36 @@ J.exportPNGZip = async ({ plan, project, transparent, layers, onProgress, signal
   }
   onProgress && onProgress(1, '完了');
   return zip.finish();
+};
+
+/* 將透明動態圖形影格直接寫入選定的專案資料夾，避免完整歌曲影格佔滿瀏覽器記憶體。 */
+J.exportPNGDirectory = async ({ plan, project, directory, onProgress, signal }) => {
+  if (!directory || typeof directory.getDirectoryHandle !== 'function') throw new Error('Please select a writable MV project folder first.');
+  const span = J.exportSpan(plan, null), [w, h] = J.outputSize(project);
+  const fps = plan.fps, total = Math.max(1, Math.round(span.dur * fps));
+  const renderDir = await directory.getDirectoryHandle('render', { create: true });
+  const mgDir = await renderDir.getDirectoryHandle('mg', { create: true });
+  const backDir = await mgDir.getDirectoryHandle('back', { create: true });
+  const frontDir = await mgDir.getDirectoryHandle('front', { create: true });
+  const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const R = new J.Renderer(), scale = w / plan.W;
+  const dirs = { back: backDir, front: frontDir };
+  for (let i = 0; i < total; i++) {
+    if (signal && signal.aborted) throw new Error('Export cancelled.');
+    const name = `frame_${String(i).padStart(6, '0')}.png`;
+    for (const layer of ['back', 'front']) {
+      R.frame(ctx, plan, span.t0 + i / fps, { scale, transparent: true, layer });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error(`Could not create PNG frame ${i}.`);
+      const handle = await dirs[layer].getFileHandle(name, { create: true });
+      const writable = await handle.createWritable();
+      try { await writable.write(blob); await writable.close(); }
+      catch (error) { try { await writable.abort(); } catch (_) {} throw error; }
+    }
+    if (onProgress && (i % 4 === 0 || i === total - 1)) onProgress((i + 1) / total, `PNG ${i + 1}/${total}`);
+  }
+  return { frames: total, fps, width: w, height: h, backPattern: 'render/mg/back/frame_%06d.png', frontPattern: 'render/mg/front/frame_%06d.png' };
 };
 
 /* ---------- plan JSON for the After Effects panel ---------- */

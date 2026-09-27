@@ -1,6 +1,16 @@
 """English copy for the browser edition. The Japanese source stays authoritative."""
 
 BODY = {
+    '通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。': 'During regular browser editing, lyrics and songs stay on this device and are not sent to a server. The optional AI MV arrangement request sends lyrics and locally extracted audio features to the OpenAI API only when you explicitly consent. Audio/video files and file paths are not sent.',
+    'AI MV Motion Graphics Engine（単曲 MVP）': 'AI MV Motion Graphics Engine (single-song MVP)',
+    '外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。': 'Import externally generated background clips and create an MV project folder. Generate AI arrangement suggestions with the local tool, then load them to review sections, styles and shots. Export transparent frames and composite them with FFmpeg.',
+    '背景動画（複数選択可）': 'Background videos (select multiple)',
+    'MV プロジェクトフォルダーを作成': 'Create MV project folder',
+    'MV プロジェクトフォルダーを開く': 'Open MV project folder',
+    'AI 提案 JSON を読み込む': 'Load AI proposal JSON',
+    'タイムラインを承認して保存': 'Approve and save timeline',
+    'プロジェクトに透過レイヤーを書き出す': 'Export transparent layers to project',
+    'ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。': 'Local commands: save your API key to macOS Keychain with <code>python3 tools/mv_engine.py keychain-set</code>. Add <code>--consent-lyrics-features</code> to request AI suggestions; <code>--approved</code> is required for rendering. The song and videos are copied into the project folder. AI requests do not include media files or file paths.',
     '文字PV系の部品を使う': 'Use typographic parts',
     'キネティックの部品を使う': 'Use kinetic parts',
     'ホラーの演出も使う': 'Include horror effects',

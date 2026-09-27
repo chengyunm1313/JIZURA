@@ -374,6 +374,37 @@ button.small.primary { padding: 4px 12px; }
 .center-dir { gap: 6px; margin: -2px 0 8px 26px; font-size: 12px; }
 .center-dir select { width: auto; }
 
+/* ---------- AI MV project review ---------- */
+.mv-panel { margin-top: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,0.025); }
+.mv-panel > summary { color: var(--amber); font-size: 13px; font-weight: 700; cursor: pointer; }
+.mv-panel > .note { line-height: 1.65; }
+.mv-video-picker { display: block; margin: 10px 0 6px; }
+.mv-file-list { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+.mv-file-row { display: flex; align-items: center; gap: 8px; min-width: 0; font: 11px var(--mono); color: var(--muted); }
+.mv-file-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mv-actions { margin-top: 8px; }
+.mv-actions button { flex: 1 1 190px; }
+.mv-review { margin-top: 14px; }
+.mv-review h4 { margin: 14px 0 7px; color: var(--text); font-size: 12px; }
+.mv-grid-scroll { overflow-x: auto; padding-bottom: 4px; }
+.mv-grid { display: flex; flex-direction: column; gap: 6px; min-width: 850px; }
+.mv-grid-row { display: grid; align-items: end; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,0.12); }
+.mv-section-row { grid-template-columns: 76px minmax(112px,1.2fr) 82px 82px minmax(150px,1.4fr) minmax(125px,1.1fr) 60px minmax(180px,2fr) 62px; }
+.mv-shot-row { grid-template-columns: 70px 78px 78px minmax(120px,1.2fr) 88px 88px minmax(130px,1.6fr) 62px; }
+.mv-grid-row > label { display: flex; flex-direction: column; gap: 3px; min-width: 0; color: var(--muted); font-size: 10px; }
+.mv-grid-row input, .mv-grid-row select { width: 100%; min-width: 0; min-height: 30px; padding: 4px 5px; font-size: 11px; }
+.mv-row-id { align-self: center; overflow: hidden; color: var(--amber); font: 10px var(--mono); text-overflow: ellipsis; }
+.mv-readonly { min-height: 30px; display: flex; align-items: center; color: var(--text); font: 11px var(--mono); }
+.mv-lock { flex-direction: row !important; align-items: center; justify-content: center; min-height: 30px; white-space: nowrap; }
+.mv-lock input { width: auto; min-height: auto; }
+.mv-status { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mv-status.error { color: #ff8f86; }
+@media (max-width: 760px) {
+  .mv-panel { padding: 9px; }
+  .mv-actions { flex-direction: column; }
+  .mv-actions button { width: 100%; }
+}
+
 /* ================= スマホ mode (#app.is-mobile) =================
    one column: sticky header with おまかせ, the preview right under it, then folding sections */
 .omk-top, .menu-btn { display: none; }

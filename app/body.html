@@ -261,6 +261,25 @@
         </div>
         <button class="terms-open linkish" style="margin-top:10px">書き出した動画・画像の権利とライセンスについて</button>
         <p class="note" id="codecNote">書き出しはこのブラウザの中で行われます（Chrome / Edge 推奨）。</p>
+        <details class="mv-panel">
+          <summary>AI MV Motion Graphics Engine（単曲 MVP）</summary>
+          <p class="note">外部で生成した背景動画を読み込み、MV プロジェクトフォルダーを作成します。AI の編曲案はローカルツールで生成し、読み込んだ後にセクション、スタイル、ショットを確認できます。最後に透過フレームを書き出し、FFmpeg で合成します。</p>
+          <label class="file mv-video-picker">背景動画（複数選択可）<input id="mvVideoFiles" type="file" accept="video/*,.mp4,.mov,.m4v,.webm" multiple></label>
+          <div id="mvVideoList" class="mv-file-list"></div>
+          <div class="outbtns mv-actions">
+            <button id="mvCreateProject" class="ghost">MV プロジェクトフォルダーを作成</button>
+            <button id="mvOpenProject" class="ghost">MV プロジェクトフォルダーを開く</button>
+            <button id="mvLoadProposalBtn" class="ghost">AI 提案 JSON を読み込む</button>
+            <input id="mvProposalFile" type="file" accept=".json,application/json" hidden>
+          </div>
+          <div id="mvTimelineReview" class="mv-review"></div>
+          <div class="outbtns mv-actions">
+            <button id="mvApprove" class="primary">タイムラインを承認して保存</button>
+            <button id="mvExportLayers" class="ghost">プロジェクトに透過レイヤーを書き出す</button>
+          </div>
+          <p id="mvStatus" class="note mv-status" role="status" aria-live="polite"></p>
+          <p class="note">ローカルコマンド：<code>python3 tools/mv_engine.py keychain-set</code> で API キーを macOS Keychain に保存します。AI 提案では <code>--consent-lyrics-features</code> を付けてください。合成には <code>--approved</code> が必要です。楽曲と動画はプロジェクトフォルダーにコピーされ、AI にはメディアファイルやパスを送信しません。</p>
+        </details>
       </div>
     </section>
   </main>
@@ -290,7 +309,7 @@
     </div>
     <p>ツール本体は <strong>MIT ライセンス</strong>で公開しています。詳細なライセンスはこちら：</p>
     <p><a href="https://github.com/852wa/JIZURA" target="_blank" rel="noopener">https://github.com/852wa/JIZURA</a></p>
-    <p class="muted terms-note">入力した歌詞や曲は、このブラウザの中だけで処理され、サーバーには送信されません。</p>
+    <p class="muted terms-note">通常のブラウザー編集では、歌詞と楽曲はこの端末内で処理され、サーバーへ送信されません。AI MV の編曲提案を使う場合は、明示的に同意したときのみ、歌詞とローカルで抽出した音楽特徴を OpenAI API へ送信します。音声・動画ファイルやファイルパスは送信しません。</p>
     <details class="terms-oss"><summary>使用しているオープンソース</summary>
       <p>MP4 書き出し：mp4-muxer（MIT License）<br>フォント：Google Fonts 配布の各書体（SIL Open Font License 1.1）</p>
     </details>

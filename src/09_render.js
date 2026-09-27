@@ -56,6 +56,14 @@ class Renderer {
 
   /* main entry: draw frame at time t into ctx (canvas px = design * scale) */
   frame(ctx, plan, t, opt = {}) {
+    const framePos = t * (plan.fps || 24);
+    const sectionStyle = (plan.mvStyleTracks || []).find(item => framePos >= item.startFrame && framePos < item.endFrame);
+    const sectionStyleDef = sectionStyle && plan.mvStyleMap && plan.mvStyleMap[sectionStyle.styleId];
+    if (sectionStyleDef) {
+      const fx0 = plan.fx;
+      plan = Object.assign({}, plan, { style: sectionStyleDef,
+        hud: fx0.hud === 'on' ? true : fx0.hud === 'off' ? false : !!sectionStyleDef.hud });
+    }
     const W = plan.W, H = plan.H, scale = opt.scale || 1;
     const cw = ctx.canvas.width, ch = ctx.canvas.height;
     const fx = plan.fx, st = plan.style, fps = plan.fps;

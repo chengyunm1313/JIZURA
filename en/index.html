@@ -397,6 +397,37 @@ button.small.primary { padding: 4px 12px; }
 .center-dir { gap: 6px; margin: -2px 0 8px 26px; font-size: 12px; }
 .center-dir select { width: auto; }
 
+/* ---------- AI MV project review ---------- */
+.mv-panel { margin-top: 16px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,0.025); }
+.mv-panel > summary { color: var(--amber); font-size: 13px; font-weight: 700; cursor: pointer; }
+.mv-panel > .note { line-height: 1.65; }
+.mv-video-picker { display: block; margin: 10px 0 6px; }
+.mv-file-list { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; }
+.mv-file-row { display: flex; align-items: center; gap: 8px; min-width: 0; font: 11px var(--mono); color: var(--muted); }
+.mv-file-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mv-actions { margin-top: 8px; }
+.mv-actions button { flex: 1 1 190px; }
+.mv-review { margin-top: 14px; }
+.mv-review h4 { margin: 14px 0 7px; color: var(--text); font-size: 12px; }
+.mv-grid-scroll { overflow-x: auto; padding-bottom: 4px; }
+.mv-grid { display: flex; flex-direction: column; gap: 6px; min-width: 850px; }
+.mv-grid-row { display: grid; align-items: end; gap: 6px; padding: 7px; border: 1px solid var(--line); border-radius: 6px; background: rgba(0,0,0,0.12); }
+.mv-section-row { grid-template-columns: 76px minmax(112px,1.2fr) 82px 82px minmax(150px,1.4fr) minmax(125px,1.1fr) 60px minmax(180px,2fr) 62px; }
+.mv-shot-row { grid-template-columns: 70px 78px 78px minmax(120px,1.2fr) 88px 88px minmax(130px,1.6fr) 62px; }
+.mv-grid-row > label { display: flex; flex-direction: column; gap: 3px; min-width: 0; color: var(--muted); font-size: 10px; }
+.mv-grid-row input, .mv-grid-row select { width: 100%; min-width: 0; min-height: 30px; padding: 4px 5px; font-size: 11px; }
+.mv-row-id { align-self: center; overflow: hidden; color: var(--amber); font: 10px var(--mono); text-overflow: ellipsis; }
+.mv-readonly { min-height: 30px; display: flex; align-items: center; color: var(--text); font: 11px var(--mono); }
+.mv-lock { flex-direction: row !important; align-items: center; justify-content: center; min-height: 30px; white-space: nowrap; }
+.mv-lock input { width: auto; min-height: auto; }
+.mv-status { white-space: pre-wrap; overflow-wrap: anywhere; }
+.mv-status.error { color: #ff8f86; }
+@media (max-width: 760px) {
+  .mv-panel { padding: 9px; }
+  .mv-actions { flex-direction: column; }
+  .mv-actions button { width: 100%; }
+}
+
 /* ================= スマホ mode (#app.is-mobile) =================
    one column: sticky header with おまかせ, the preview right under it, then folding sections */
 .omk-top, .menu-btn { display: none; }
@@ -712,6 +743,25 @@ button.small.primary { padding: 4px 12px; }
         </div>
         <button class="terms-open linkish" style="margin-top:10px">Rights and licenses for exported videos and images</button>
         <p class="note" id="codecNote">Export runs in your browser (Chrome or Edge recommended).</p>
+        <details class="mv-panel">
+          <summary>AI MV Motion Graphics Engine (single-song MVP)</summary>
+          <p class="note">Import externally generated background clips and create an MV project folder. Generate AI arrangement suggestions with the local tool, then load them to review sections, styles and shots. Export transparent frames and composite them with FFmpeg.</p>
+          <label class="file mv-video-picker">Background videos (select multiple)<input id="mvVideoFiles" type="file" accept="video/*,.mp4,.mov,.m4v,.webm" multiple></label>
+          <div id="mvVideoList" class="mv-file-list"></div>
+          <div class="outbtns mv-actions">
+            <button id="mvCreateProject" class="ghost">Create MV project folder</button>
+            <button id="mvOpenProject" class="ghost">Open MV project folder</button>
+            <button id="mvLoadProposalBtn" class="ghost">Load AI proposal JSON</button>
+            <input id="mvProposalFile" type="file" accept=".json,application/json" hidden>
+          </div>
+          <div id="mvTimelineReview" class="mv-review"></div>
+          <div class="outbtns mv-actions">
+            <button id="mvApprove" class="primary">Approve and save timeline</button>
+            <button id="mvExportLayers" class="ghost">Export transparent layers to project</button>
+          </div>
+          <p id="mvStatus" class="note mv-status" role="status" aria-live="polite"></p>
+          <p class="note">Local commands: save your API key to macOS Keychain with <code>python3 tools/mv_engine.py keychain-set</code>. Add <code>--consent-lyrics-features</code> to request AI suggestions; <code>--approved</code> is required for rendering. The song and videos are copied into the project folder. AI requests do not include media files or file paths.</p>
+        </details>
       </div>
     </section>
   </main>
@@ -741,7 +791,7 @@ button.small.primary { padding: 4px 12px; }
     </div>
     <p>The tool is released under the <strong>MIT license</strong>. See the license at:</p>
     <p><a href="https://github.com/852wa/JIZURA" target="_blank" rel="noopener">https://github.com/852wa/JIZURA</a></p>
-    <p class="muted terms-note">Your lyrics and audio are processed in this browser and are not sent to a server.</p>
+    <p class="muted terms-note">During regular browser editing, lyrics and songs stay on this device and are not sent to a server. The optional AI MV arrangement request sends lyrics and locally extracted audio features to the OpenAI API only when you explicitly consent. Audio/video files and file paths are not sent.</p>
     <details class="terms-oss"><summary>Open source software</summary>
       <p>MP4 export: mp4-muxer（MIT License）<br>Fonts: Google Fonts typefaces（SIL Open Font License 1.1）</p>
     </details>
@@ -4511,6 +4561,14 @@ class Renderer {
 
   /* main entry: draw frame at time t into ctx (canvas px = design * scale) */
   frame(ctx, plan, t, opt = {}) {
+    const framePos = t * (plan.fps || 24);
+    const sectionStyle = (plan.mvStyleTracks || []).find(item => framePos >= item.startFrame && framePos < item.endFrame);
+    const sectionStyleDef = sectionStyle && plan.mvStyleMap && plan.mvStyleMap[sectionStyle.styleId];
+    if (sectionStyleDef) {
+      const fx0 = plan.fx;
+      plan = Object.assign({}, plan, { style: sectionStyleDef,
+        hud: fx0.hud === 'on' ? true : fx0.hud === 'off' ? false : !!sectionStyleDef.hud });
+    }
     const W = plan.W, H = plan.H, scale = opt.scale || 1;
     const cw = ctx.canvas.width, ch = ctx.canvas.height;
     const fx = plan.fx, st = plan.style, fps = plan.fps;
@@ -5377,7 +5435,7 @@ J.exportPNGZip = async ({ plan, project, transparent, layers, onProgress, signal
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
   const R = new J.Renderer();
-  const fps = plan.fps, total = Math.max(1, Math.round(span.dur * fps));
+  const fps = plan.fps, total = Math.max(1, Math.ceil(span.dur * fps));
   const zip = new ZipWriter();
   const scale = w / plan.W;
   for (let i = 0; i < total; i += every) {
@@ -5392,6 +5450,36 @@ J.exportPNGZip = async ({ plan, project, transparent, layers, onProgress, signal
   }
   onProgress && onProgress(1, 'Done');
   return zip.finish();
+};
+
+/* 將透明動態圖形影格直接寫入選定的專案資料夾，避免完整歌曲影格佔滿瀏覽器記憶體。 */
+J.exportPNGDirectory = async ({ plan, project, directory, onProgress, signal }) => {
+  if (!directory || typeof directory.getDirectoryHandle !== 'function') throw new Error('Please select a writable MV project folder first.');
+  const span = J.exportSpan(plan, null), [w, h] = J.outputSize(project);
+  const fps = plan.fps, total = Math.max(1, Math.round(span.dur * fps));
+  const renderDir = await directory.getDirectoryHandle('render', { create: true });
+  const mgDir = await renderDir.getDirectoryHandle('mg', { create: true });
+  const backDir = await mgDir.getDirectoryHandle('back', { create: true });
+  const frontDir = await mgDir.getDirectoryHandle('front', { create: true });
+  const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const R = new J.Renderer(), scale = w / plan.W;
+  const dirs = { back: backDir, front: frontDir };
+  for (let i = 0; i < total; i++) {
+    if (signal && signal.aborted) throw new Error('Export cancelled.');
+    const name = `frame_${String(i).padStart(6, '0')}.png`;
+    for (const layer of ['back', 'front']) {
+      R.frame(ctx, plan, span.t0 + i / fps, { scale, transparent: true, layer });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error(`Could not create PNG frame ${i}.`);
+      const handle = await dirs[layer].getFileHandle(name, { create: true });
+      const writable = await handle.createWritable();
+      try { await writable.write(blob); await writable.close(); }
+      catch (error) { try { await writable.abort(); } catch (_) {} throw error; }
+    }
+    if (onProgress && (i % 4 === 0 || i === total - 1)) onProgress((i + 1) / total, `PNG ${i + 1}/${total}`);
+  }
+  return { frames: total, fps, width: w, height: h, backPattern: 'render/mg/back/frame_%06d.png', frontPattern: 'render/mg/front/frame_%06d.png' };
 };
 
 /* ---------- plan JSON for the After Effects panel ---------- */
@@ -35883,7 +35971,7 @@ const ICON = {
   range: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3v10M13 3v10"/><path d="M5.5 8h5M8.5 5.5L11 8l-2.5 2.5"/></svg>',
 };
 
-const S = { project: null, plan: null, audio: null, renderer: new J.Renderer(), playing: false, t: 0, t0: 0, loop: 'all', loopHold: null, need: true, exporting: null, tap: null, slow: false, lineEls: [], curLine: -2 };
+const S = { project: null, plan: null, audio: null, audioFile: null, mvVideos: [], mvTimeline: null, mvProjectDir: null, mvProjectName: '', renderer: new J.Renderer(), playing: false, t: 0, t0: 0, loop: 'all', loopHold: null, need: true, exporting: null, tap: null, slow: false, lineEls: [], curLine: -2 };
 const LOOP_CYCLE = ['all', 'line', 'cut', false];
 const LOOP_COPY = {
   all:  { ja: 'Loop', en: 'Loop', titleJa: 'Loop the whole piece', titleEn: 'Loop the whole piece' },
@@ -36026,6 +36114,15 @@ function langNote() {
 }
 function replan() {
   S.plan = J.plan(S.project, audioLike());
+  if (S.mvTimeline && J.MVTimeline) {
+    J.MVTimeline.attachToPlan(S.plan, S.project, S.mvTimeline);
+    const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
+      ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
+    if (S.mvTimeline.editorProject && JSON.stringify(stable(S.project)) !== JSON.stringify(stable(S.mvTimeline.editorProject))) {
+      S.mvTimeline.approved = false;
+      S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' });
+    }
+  }
   // lines locked in older projects (seed only): take a snapshot now, so from here on they stay exactly as they are
   for (const [i, o] of Object.entries(S.project.overrides || {})) if (o && o.lock && !Array.isArray(o.lockedCuts)) { const snap = J.lineSnapshot(S.plan, +i); if (snap) o.lockedCuts = snap; }
   langNote();
@@ -36619,7 +36716,9 @@ async function resetAll() {
   if (S.tap) stopTap();
   pause();
   S.project = mergeProject(null); S.project.lyrics = '';
-  S.audio = null; if ($('audioFile')) $('audioFile').value = '';
+  S.audio = null; S.audioFile = null; S.mvVideos = []; S.mvTimeline = null; S.mvProjectDir = null; S.mvProjectName = '';
+  if ($('audioFile')) $('audioFile').value = '';
+  if ($('mvVideoFiles')) $('mvVideoFiles').value = '';
   if (J.forgetSong) await J.forgetSong();
   $('audioName').textContent = audioNameDefault;
   ED.undo = []; ED.redo = []; H.list = []; H.i = -1;
@@ -37342,6 +37441,33 @@ function bind() {
   $('snap').addEventListener('change', e => { S.project.timing.snap = e.target.checked; replan(); });
   $('btnResetTimes').addEventListener('click', () => { S.project.timing.lineTimes = {}; replan(); });
   $('audioFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) loadAudioFile(f); });
+  if ($('mvVideoFiles')) $('mvVideoFiles').addEventListener('change', async e => {
+    const files = [...(e.target.files || [])]; e.target.value = '';
+    try { await addMVVideoFiles(files); } catch (error) { mvStatus(error.message || String(error), true); }
+  });
+  if ($('mvCreateProject')) $('mvCreateProject').addEventListener('click', async () => {
+    mvStatus(''); try { await createMVProjectFolder(); } catch (error) { if (error.name !== 'AbortError') mvStatus(error.message || String(error), true); }
+  });
+  if ($('mvOpenProject')) $('mvOpenProject').addEventListener('click', async () => {
+    mvStatus(''); try { await openMVProjectFolder(); } catch (error) { if (error.name !== 'AbortError') mvStatus(`${mvText('folderRead')} ${error.message || error}`, true); }
+  });
+  if ($('mvLoadProposalBtn')) $('mvLoadProposalBtn').addEventListener('click', () => $('mvProposalFile').click());
+  if ($('mvProposalFile')) $('mvProposalFile').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+    try { await loadMVProposal(file); } catch (error) { mvStatus(`${mvText('invalid')} ${error.message || error}`, true); }
+  });
+  if ($('mvApprove')) $('mvApprove').addEventListener('click', async () => {
+    mvStatus(''); try { await approveMVTimeline(); } catch (error) { mvStatus(error.message || String(error), true); }
+  });
+  if ($('mvExportLayers')) $('mvExportLayers').addEventListener('click', async () => {
+    mvStatus(''); try { await exportMVLayers(); } catch (error) { mvStatus(error.message || String(error), true); }
+  });
+  if ($('mvTimelineReview')) $('mvTimelineReview').addEventListener('change', e => {
+    const sectionRow = e.target.closest('[data-section]');
+    if (sectionRow && e.target.dataset.sectionField) { updateMVSection(+sectionRow.dataset.section, e.target.dataset.sectionField, e.target.type === 'checkbox' ? e.target.checked : e.target.value); return; }
+    const shotRow = e.target.closest('[data-shot]');
+    if (shotRow && e.target.dataset.shotField) updateMVShot(+shotRow.dataset.shot, e.target.dataset.shotField, e.target.value);
+  });
   $('btnTap').addEventListener('click', () => (S.tap ? stopTap() : startTap()));
   $('tapBtn').addEventListener('click', tapNow);
   $('tapStop').addEventListener('click', () => { pause(); stopTap(); });
@@ -37503,7 +37629,13 @@ function bind() {
   $('resetDlg').addEventListener('close', () => { if ($('resetDlg').returnValue === 'reset') resetAll(); });
   $('fileProject').addEventListener('change', async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
-    try { S.project = mergeProject(JSON.parse(await f.text())); syncUI(); replan(); restoreFonts(); }
+    try {
+      S.project = mergeProject(JSON.parse(await f.text()));
+      S.mvTimeline = null; S.mvProjectDir = null; S.mvProjectName = ''; S.mvVideos = [];
+      if ($('mvVideoFiles')) $('mvVideoFiles').value = '';
+      renderMVVideoList(); renderMVTimeline(); mvStatus('');
+      syncUI(); replan(); restoreFonts();
+    }
     catch (err) { showMsg('Could not open the project'); setTimeout(() => showMsg(null), 2500); }
     e.target.value = '';
   });
@@ -37535,14 +37667,511 @@ async function loadAudioFile(f, restored) {
     pause();
     const a = await J.analyzeAudio(f);
     if (my !== audioSeq) return false;
-    S.audio = a;
+    S.audio = a; S.audioFile = f;
     $('audioName').textContent = `${f.name}（${J.fmtTime(S.audio.duration)} · about ${S.audio.bpm}BPM）` + (restored ? ' · last song' : '');
     S.project.audioName = f.name;
     if (!restored && J.saveSong) J.saveSong(f);             // kept in this browser: a reload does not drop the song from exports
     S.project.timing.snap = true;
     syncUI(); replan();
     return true;
-  } catch (err) { if (my !== audioSeq) return false; $('audioName').textContent = 'Could not load: ' + err.message; S.audio = null; return false; }
+  } catch (err) { if (my !== audioSeq) return false; $('audioName').textContent = 'Could not load: ' + err.message; S.audio = null; S.audioFile = null; return false; }
+}
+
+/* ---------------- MV Timeline v1 project workflow ---------------- */
+const MV_COPY = {
+  en: {
+    noAudio: 'Import a song before creating an MV project.', noVideo: 'Add at least one external background video.',
+    noFolderApi: 'Folder access requires Chrome or Edge on a secure page (HTTPS or localhost).', noProject: 'Create or open an MV project folder first.',
+    created: 'MV project folder created:', opened: 'MV project opened:', proposal: 'AI proposal loaded. Review sections and shots, then approve it.',
+    approved: 'Approved timeline saved. Export the transparent layers, then run the local FFmpeg command.',
+    layerDone: 'Transparent layers saved to the project folder.', invalid: 'Timeline check failed:', folderRead: 'Could not open the MV project folder:',
+    chooseVideo: 'Choose external AI video clips', chooseFolder: 'Open MV project folder', createFolder: 'Create MV project folder',
+    sections: 'Sections', shots: 'Background shots', start: 'Start frame', end: 'End frame', type: 'Section', style: 'Style',
+    confidence: 'AI confidence', lock: 'Lock', asset: 'Video file', sourceIn: 'Source in (s)', sourceOut: 'Source out (s)',
+    description: 'Shot suggestion', addShot: 'Add shot', removeShot: 'Remove', unknown: 'Unclassified', intro: 'Intro', verse: 'Verse',
+    prechorus: 'Pre-chorus', chorus: 'Chorus', bridge: 'Bridge', outro: 'Outro', instrumental: 'Instrumental', select: 'Select video',
+    mismatch: 'Output settings changed. Recreate the MV project folder so its frame rate and dimensions stay in sync.',
+    confirmProposal: 'An AI proposal is available. Load it for review? The approved timeline will not be changed until you save it.',
+    needApproval: 'Review and approve the timeline before exporting layers.',
+    removeVideo: 'Remove this video', usedVideo: 'This video is assigned to a shot. Reassign that shot before removing the video.',
+    badSource: 'The selected proposal does not match this project folder\u2019s assets or output settings.',
+    partialLayers: 'Layer export is incomplete. Export the transparent layers again before rendering.',
+    badAudio: 'The loaded song does not match this MV project. Recreate the project folder to use a different song.',
+  },
+  ja: {
+    noAudio: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u4f5c\u308b\u524d\u306b\u66f2\u3092\u8aad\u307f\u8fbc\u3093\u3067\u304f\u3060\u3055\u3044\u3002', noVideo: '\u5916\u90e8\u3067\u751f\u6210\u3057\u305f\u80cc\u666f\u52d5\u753b\u30921\u672c\u4ee5\u4e0a\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    noFolderApi: '\u30d5\u30a9\u30eb\u30c0\u30fc\u3078\u306e\u30a2\u30af\u30bb\u30b9\u306b\u306f\u3001HTTPS \u307e\u305f\u306f localhost \u4e0a\u306e Chrome\uff0fEdge \u304c\u5fc5\u8981\u3067\u3059\u3002', noProject: '\u5148\u306b MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u4f5c\u6210\u3059\u308b\u304b\u958b\u3044\u3066\u304f\u3060\u3055\u3044\u3002',
+    created: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u4f5c\u6210\u3057\u307e\u3057\u305f\uff1a', opened: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3092\u958b\u304d\u307e\u3057\u305f\uff1a', proposal: 'AI \u63d0\u6848\u3092\u8aad\u307f\u8fbc\u307f\u307e\u3057\u305f\u3002\u30bb\u30af\u30b7\u30e7\u30f3\u3068\u30b7\u30e7\u30c3\u30c8\u3092\u78ba\u8a8d\u3057\u3066\u627f\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    approved: '\u30bf\u30a4\u30e0\u30e9\u30a4\u30f3\u3092\u627f\u8a8d\u3057\u3066\u4fdd\u5b58\u3057\u307e\u3057\u305f\u3002\u900f\u904e\u30ec\u30a4\u30e4\u30fc\u3092\u66f8\u304d\u51fa\u3057\u3001\u30ed\u30fc\u30ab\u30eb\u306e FFmpeg \u30b3\u30de\u30f3\u30c9\u3092\u5b9f\u884c\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    layerDone: '\u900f\u904e\u30ec\u30a4\u30e4\u30fc\u3092\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u306b\u4fdd\u5b58\u3057\u307e\u3057\u305f\u3002', invalid: '\u30bf\u30a4\u30e0\u30e9\u30a4\u30f3\u306e\u691c\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f\uff1a', folderRead: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u958b\u3051\u307e\u305b\u3093\uff1a',
+    chooseVideo: '\u5916\u90e8\u3067\u751f\u6210\u3057\u305f\u52d5\u753b\u3092\u9078\u629e', chooseFolder: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u958b\u304f', createFolder: 'MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u4f5c\u6210',
+    sections: '\u66f2\u306e\u30bb\u30af\u30b7\u30e7\u30f3', shots: '\u80cc\u666f\u30b7\u30e7\u30c3\u30c8', start: '\u958b\u59cb\u30d5\u30ec\u30fc\u30e0', end: '\u7d42\u4e86\u30d5\u30ec\u30fc\u30e0', type: '\u30bb\u30af\u30b7\u30e7\u30f3\u7a2e\u5225', style: '\u30b9\u30bf\u30a4\u30eb',
+    confidence: 'AI \u306e\u4fe1\u983c\u5ea6', lock: '\u30ed\u30c3\u30af', asset: '\u52d5\u753b\u7d20\u6750', sourceIn: '\u7d20\u6750\u306e\u958b\u59cb\uff08\u79d2\uff09', sourceOut: '\u7d20\u6750\u306e\u7d42\u4e86\uff08\u79d2\uff09',
+    description: '\u30b7\u30e7\u30c3\u30c8\u306e\u63d0\u6848', addShot: '\u30b7\u30e7\u30c3\u30c8\u3092\u8ffd\u52a0', removeShot: '\u524a\u9664', unknown: '\u672a\u5206\u985e', intro: '\u30a4\u30f3\u30c8\u30ed', verse: 'A\u30e1\u30ed',
+    prechorus: 'B\u30e1\u30ed', chorus: '\u30b5\u30d3', bridge: '\u30d6\u30ea\u30c3\u30b8', outro: '\u30a2\u30a6\u30c8\u30ed', instrumental: '\u9593\u594f', select: '\u52d5\u753b\u3092\u9078\u629e',
+    mismatch: '\u51fa\u529b\u8a2d\u5b9a\u304c\u5909\u66f4\u3055\u308c\u307e\u3057\u305f\u3002\u30d5\u30ec\u30fc\u30e0\u30ec\u30fc\u30c8\u3068\u30b5\u30a4\u30ba\u3092\u5408\u308f\u305b\u308b\u305f\u3081\u3001MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u4f5c\u308a\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    confirmProposal: 'AI \u63d0\u6848\u304c\u3042\u308a\u307e\u3059\u3002\u78ba\u8a8d\u306e\u305f\u3081\u8aad\u307f\u8fbc\u307f\u307e\u3059\u304b\uff1f\u4fdd\u5b58\u3059\u308b\u307e\u3067\u627f\u8a8d\u6e08\u307f\u30bf\u30a4\u30e0\u30e9\u30a4\u30f3\u306f\u5909\u66f4\u3055\u308c\u307e\u305b\u3093\u3002', needApproval: '\u30ec\u30a4\u30e4\u30fc\u3092\u66f8\u304d\u51fa\u3059\u524d\u306b\u30bf\u30a4\u30e0\u30e9\u30a4\u30f3\u3092\u78ba\u8a8d\u3057\u3066\u627f\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    removeVideo: '\u3053\u306e\u52d5\u753b\u3092\u524a\u9664', usedVideo: '\u3053\u306e\u52d5\u753b\u306f\u30b7\u30e7\u30c3\u30c8\u306b\u5272\u308a\u5f53\u3066\u3089\u308c\u3066\u3044\u307e\u3059\u3002\u524a\u9664\u3059\u308b\u524d\u306b\u30b7\u30e7\u30c3\u30c8\u306e\u7d20\u6750\u3092\u5909\u66f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    badSource: '\u63d0\u6848\u306e\u7d20\u6750\u307e\u305f\u306f\u51fa\u529b\u8a2d\u5b9a\u304c\u3053\u306e\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3068\u4e00\u81f4\u3057\u307e\u305b\u3093\u3002', partialLayers: '\u30ec\u30a4\u30e4\u30fc\u306e\u66f8\u304d\u51fa\u3057\u304c\u672a\u5b8c\u4e86\u3067\u3059\u3002\u5408\u6210\u524d\u306b\u900f\u904e\u30ec\u30a4\u30e4\u30fc\u3092\u66f8\u304d\u51fa\u3057\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+    badAudio: '\u8aad\u307f\u8fbc\u3093\u3060\u66f2\u304c\u3053\u306e MV \u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u3068\u4e00\u81f4\u3057\u307e\u305b\u3093\u3002\u5225\u306e\u66f2\u3092\u4f7f\u3046\u5834\u5408\u306f\u30d7\u30ed\u30b8\u30a7\u30af\u30c8\u30d5\u30a9\u30eb\u30c0\u30fc\u3092\u4f5c\u308a\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+  },
+  'zh-Hant': {
+    noAudio: '\u8acb\u5148\u532f\u5165\u6b4c\u66f2\uff0c\u518d\u5efa\u7acb MV \u5c08\u6848\u3002', noVideo: '\u8acb\u5148\u52a0\u5165\u81f3\u5c11\u4e00\u6bb5\u5916\u90e8\u751f\u6210\u7684\u80cc\u666f\u5f71\u7247\u3002',
+    noFolderApi: '\u8cc7\u6599\u593e\u5b58\u53d6\u9700\u8981\u5728\u5b89\u5168\u9801\u9762\uff08HTTPS \u6216 localhost\uff09\u4f7f\u7528 Chrome \u6216 Edge\u3002', noProject: '\u8acb\u5148\u5efa\u7acb\u6216\u958b\u555f MV \u5c08\u6848\u8cc7\u6599\u593e\u3002',
+    created: '\u5df2\u5efa\u7acb MV \u5c08\u6848\u8cc7\u6599\u593e\uff1a', opened: '\u5df2\u958b\u555f MV \u5c08\u6848\uff1a', proposal: '\u5df2\u8f09\u5165 AI \u5efa\u8b70\u3002\u8acb\u6aa2\u67e5\u6bb5\u843d\u8207\u93e1\u982d\uff0c\u518d\u6838\u51c6\u6642\u9593\u8ef8\u3002',
+    approved: '\u5df2\u6838\u51c6\u4e26\u5132\u5b58\u6642\u9593\u8ef8\u3002\u63a5\u8457\u8f38\u51fa\u900f\u660e\u5716\u5c64\uff0c\u518d\u57f7\u884c\u672c\u6a5f FFmpeg \u6307\u4ee4\u3002',
+    layerDone: '\u900f\u660e\u5716\u5c64\u5df2\u76f4\u63a5\u5beb\u5165\u5c08\u6848\u8cc7\u6599\u593e\u3002', invalid: '\u6642\u9593\u8ef8\u6aa2\u67e5\u672a\u901a\u904e\uff1a', folderRead: '\u7121\u6cd5\u958b\u555f MV \u5c08\u6848\u8cc7\u6599\u593e\uff1a',
+    chooseVideo: '\u9078\u64c7\u5916\u90e8\u751f\u6210\u7684\u5f71\u7247', chooseFolder: '\u958b\u555f MV \u5c08\u6848\u8cc7\u6599\u593e', createFolder: '\u5efa\u7acb MV \u5c08\u6848\u8cc7\u6599\u593e',
+    sections: '\u6b4c\u66f2\u6bb5\u843d', shots: '\u80cc\u666f\u93e1\u982d', start: '\u8d77\u59cb\u5f71\u683c', end: '\u7d50\u675f\u5f71\u683c', type: '\u6bb5\u843d\u985e\u578b', style: '\u98a8\u683c',
+    confidence: 'AI \u4fe1\u5fc3\u503c', lock: '\u9396\u5b9a', asset: '\u5f71\u7247\u7d20\u6750', sourceIn: '\u4f86\u6e90\u5165\u9ede\uff08\u79d2\uff09', sourceOut: '\u4f86\u6e90\u51fa\u9ede\uff08\u79d2\uff09',
+    description: '\u93e1\u982d\u5efa\u8b70', addShot: '\u65b0\u589e\u93e1\u982d', removeShot: '\u79fb\u9664', unknown: '\u672a\u5206\u985e', intro: '\u524d\u594f', verse: '\u4e3b\u6b4c',
+    prechorus: '\u9810\u526f\u6b4c', chorus: '\u526f\u6b4c', bridge: '\u6a4b\u6bb5', outro: '\u5c3e\u594f', instrumental: '\u9593\u594f', select: '\u9078\u64c7\u5f71\u7247',
+    mismatch: '\u8f38\u51fa\u8a2d\u5b9a\u5df2\u8b8a\u66f4\u3002\u8acb\u91cd\u65b0\u5efa\u7acb MV \u5c08\u6848\u8cc7\u6599\u593e\uff0c\u8b93\u5f71\u683c\u7387\u8207\u5c3a\u5bf8\u4fdd\u6301\u4e00\u81f4\u3002',
+    confirmProposal: '\u627e\u5230 AI \u5efa\u8b70\u6a94\uff0c\u8981\u8f09\u5165\u5be9\u6838\u55ce\uff1f\u5132\u5b58\u524d\u4e0d\u6703\u6539\u52d5\u5df2\u6838\u51c6\u7684\u6642\u9593\u8ef8\u3002',
+    needApproval: '\u8acb\u5148\u6aa2\u67e5\u4e26\u6838\u51c6\u6642\u9593\u8ef8\uff0c\u518d\u8f38\u51fa\u5716\u5c64\u3002',
+    removeVideo: '\u79fb\u9664\u6b64\u5f71\u7247', usedVideo: '\u6b64\u5f71\u7247\u5df2\u7528\u65bc\u6642\u9593\u8ef8\u93e1\u982d\uff0c\u8acb\u5148\u6539\u6307\u6d3e\u5176\u4ed6\u5f71\u7247\u3002',
+    badSource: '\u9019\u4efd\u5efa\u8b70\u7684\u7d20\u6750\u6216\u8f38\u51fa\u8a2d\u5b9a\u8207\u76ee\u524d\u5c08\u6848\u8cc7\u6599\u593e\u4e0d\u7b26\u3002',
+    partialLayers: '\u5716\u5c64\u5c1a\u672a\u5b8c\u6574\u8f38\u51fa\u3002\u8acb\u91cd\u65b0\u8f38\u51fa\u900f\u660e\u5716\u5c64\uff0c\u518d\u9032\u884c\u5408\u6210\u3002',
+    badAudio: '\u76ee\u524d\u8f09\u5165\u7684\u6b4c\u66f2\u8207\u6b64 MV \u5c08\u6848\u4e0d\u7b26\u3002\u82e5\u8981\u66f4\u63db\u6b4c\u66f2\uff0c\u8acb\u91cd\u65b0\u5efa\u7acb\u5c08\u6848\u8cc7\u6599\u593e\u3002',
+  },
+  'zh-Hans': {
+    noAudio: '\u8bf7\u5148\u5bfc\u5165\u6b4c\u66f2\uff0c\u518d\u521b\u5efa MV \u9879\u76ee\u3002', noVideo: '\u8bf7\u5148\u6dfb\u52a0\u81f3\u5c11\u4e00\u6bb5\u5916\u90e8\u751f\u6210\u7684\u80cc\u666f\u89c6\u9891\u3002',
+    noFolderApi: '\u6587\u4ef6\u5939\u8bbf\u95ee\u9700\u8981\u5728\u5b89\u5168\u9875\u9762\uff08HTTPS \u6216 localhost\uff09\u4e2d\u4f7f\u7528 Chrome \u6216 Edge\u3002', noProject: '\u8bf7\u5148\u521b\u5efa\u6216\u6253\u5f00 MV \u9879\u76ee\u6587\u4ef6\u5939\u3002',
+    created: '\u5df2\u521b\u5efa MV \u9879\u76ee\u6587\u4ef6\u5939\uff1a', opened: '\u5df2\u6253\u5f00 MV \u9879\u76ee\uff1a', proposal: '\u5df2\u8f7d\u5165 AI \u5efa\u8bae\u3002\u8bf7\u68c0\u67e5\u6bb5\u843d\u548c\u955c\u5934\uff0c\u518d\u5ba1\u6838\u65f6\u95f4\u8f74\u3002',
+    approved: '\u5df2\u5ba1\u6838\u5e76\u4fdd\u5b58\u65f6\u95f4\u8f74\u3002\u63a5\u7740\u5bfc\u51fa\u900f\u660e\u56fe\u5c42\uff0c\u518d\u8fd0\u884c\u672c\u5730 FFmpeg \u547d\u4ee4\u3002',
+    layerDone: '\u900f\u660e\u56fe\u5c42\u5df2\u76f4\u63a5\u5199\u5165\u9879\u76ee\u6587\u4ef6\u5939\u3002', invalid: '\u65f6\u95f4\u8f74\u68c0\u67e5\u672a\u901a\u8fc7\uff1a', folderRead: '\u65e0\u6cd5\u6253\u5f00 MV \u9879\u76ee\u6587\u4ef6\u5939\uff1a',
+    chooseVideo: '\u9009\u62e9\u5916\u90e8\u751f\u6210\u7684\u89c6\u9891', chooseFolder: '\u6253\u5f00 MV \u9879\u76ee\u6587\u4ef6\u5939', createFolder: '\u521b\u5efa MV \u9879\u76ee\u6587\u4ef6\u5939',
+    sections: '\u6b4c\u66f2\u6bb5\u843d', shots: '\u80cc\u666f\u955c\u5934', start: '\u8d77\u59cb\u5e27', end: '\u7ed3\u675f\u5e27', type: '\u6bb5\u843d\u7c7b\u578b', style: '\u98ce\u683c',
+    confidence: 'AI \u7f6e\u4fe1\u5ea6', lock: '\u9501\u5b9a', asset: '\u89c6\u9891\u7d20\u6750', sourceIn: '\u6765\u6e90\u5165\u70b9\uff08\u79d2\uff09', sourceOut: '\u6765\u6e90\u51fa\u70b9\uff08\u79d2\uff09',
+    description: '\u955c\u5934\u5efa\u8bae', addShot: '\u6dfb\u52a0\u955c\u5934', removeShot: '\u79fb\u9664', unknown: '\u672a\u5206\u7c7b', intro: '\u524d\u594f', verse: '\u4e3b\u6b4c',
+    prechorus: '\u9884\u526f\u6b4c', chorus: '\u526f\u6b4c', bridge: '\u6865\u6bb5', outro: '\u5c3e\u594f', instrumental: '\u95f4\u594f', select: '\u9009\u62e9\u89c6\u9891',
+    mismatch: '\u8f93\u51fa\u8bbe\u7f6e\u5df2\u53d8\u66f4\u3002\u8bf7\u91cd\u65b0\u521b\u5efa MV \u9879\u76ee\u6587\u4ef6\u5939\uff0c\u4ee5\u4fdd\u6301\u5e27\u7387\u548c\u5c3a\u5bf8\u4e00\u81f4\u3002',
+    confirmProposal: '\u627e\u5230 AI \u5efa\u8bae\u6587\u4ef6\uff0c\u8981\u8f7d\u5165\u5ba1\u6838\u5417\uff1f\u4fdd\u5b58\u524d\u4e0d\u4f1a\u6539\u52a8\u5df2\u5ba1\u6838\u7684\u65f6\u95f4\u8f74\u3002', needApproval: '\u8bf7\u5148\u68c0\u67e5\u5e76\u5ba1\u6838\u65f6\u95f4\u8f74\uff0c\u518d\u5bfc\u51fa\u56fe\u5c42\u3002',
+    removeVideo: '\u79fb\u9664\u6b64\u89c6\u9891', usedVideo: '\u6b64\u89c6\u9891\u5df2\u7528\u4e8e\u65f6\u95f4\u8f74\u955c\u5934\uff0c\u8bf7\u5148\u91cd\u65b0\u6307\u5b9a\u8be5\u955c\u5934\u518d\u79fb\u9664\u3002',
+    badSource: '\u8fd9\u4efd\u5efa\u8bae\u7684\u7d20\u6750\u6216\u8f93\u51fa\u8bbe\u7f6e\u4e0e\u5f53\u524d\u9879\u76ee\u6587\u4ef6\u5939\u4e0d\u7b26\u3002', partialLayers: '\u56fe\u5c42\u5c1a\u672a\u5b8c\u6574\u5bfc\u51fa\u3002\u8bf7\u91cd\u65b0\u5bfc\u51fa\u900f\u660e\u56fe\u5c42\u540e\u518d\u5408\u6210\u3002',
+    badAudio: '\u5f53\u524d\u8f7d\u5165\u7684\u6b4c\u66f2\u4e0e\u6b64 MV \u9879\u76ee\u4e0d\u7b26\u3002\u5982\u9700\u66f4\u6362\u6b4c\u66f2\uff0c\u8bf7\u91cd\u65b0\u521b\u5efa\u9879\u76ee\u6587\u4ef6\u5939\u3002',
+  },
+  ko: {
+    noAudio: 'MV \ud504\ub85c\uc81d\ud2b8\ub97c \ub9cc\ub4e4\uae30 \uc804\uc5d0 \uace1\uc744 \uac00\uc838\uc624\uc138\uc694.', noVideo: '\uc678\ubd80\uc5d0\uc11c \uc0dd\uc131\ud55c \ubc30\uacbd \uc601\uc0c1\uc744 \ud558\ub098 \uc774\uc0c1 \ucd94\uac00\ud558\uc138\uc694.',
+    noFolderApi: '\ud3f4\ub354 \uc811\uadfc\uc5d0\ub294 \ubcf4\uc548 \ud398\uc774\uc9c0(HTTPS \ub610\ub294 localhost)\uc758 Chrome\uc774\ub098 Edge\uac00 \ud544\uc694\ud569\ub2c8\ub2e4.', noProject: '\uba3c\uc800 MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\ub97c \ub9cc\ub4e4\uac70\ub098 \uc5ec\uc138\uc694.',
+    created: 'MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354 \uc0dd\uc131:', opened: 'MV \ud504\ub85c\uc81d\ud2b8 \uc5f4\uae30:', proposal: 'AI \uc81c\uc548\uc744 \ubd88\ub7ec\uc654\uc2b5\ub2c8\ub2e4. \uc139\uc158\uacfc \uc0f7\uc744 \uac80\ud1a0\ud55c \ub4a4 \uc2b9\uc778\ud558\uc138\uc694.',
+    approved: '\ud0c0\uc784\ub77c\uc778\uc744 \uc2b9\uc778\ud558\uace0 \uc800\uc7a5\ud588\uc2b5\ub2c8\ub2e4. \ud22c\uba85 \ub808\uc774\uc5b4\ub97c \ub0b4\ubcf4\ub0b8 \ub4a4 \ub85c\uceec FFmpeg \uba85\ub839\uc744 \uc2e4\ud589\ud558\uc138\uc694.',
+    layerDone: '\ud22c\uba85 \ub808\uc774\uc5b4\ub97c \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\uc5d0 \uc800\uc7a5\ud588\uc2b5\ub2c8\ub2e4.', invalid: '\ud0c0\uc784\ub77c\uc778 \uac80\uc0ac \uc2e4\ud328:', folderRead: 'MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\ub97c \uc5f4 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4:',
+    chooseVideo: '\uc678\ubd80 \uc0dd\uc131 \uc601\uc0c1 \uc120\ud0dd', chooseFolder: 'MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354 \uc5f4\uae30', createFolder: 'MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354 \ub9cc\ub4e4\uae30',
+    sections: '\uc139\uc158', shots: '\ubc30\uacbd \uc0f7', start: '\uc2dc\uc791 \ud504\ub808\uc784', end: '\ub05d \ud504\ub808\uc784', type: '\uc139\uc158', style: '\uc2a4\ud0c0\uc77c',
+    confidence: 'AI \uc2e0\ub8b0\ub3c4', lock: '\uc7a0\uae08', asset: '\uc601\uc0c1 \ud30c\uc77c', sourceIn: '\uc18c\uc2a4 \uc2dc\uc791(\ucd08)', sourceOut: '\uc18c\uc2a4 \ub05d(\ucd08)',
+    description: '\uc0f7 \uc81c\uc548', addShot: '\uc0f7 \ucd94\uac00', removeShot: '\uc0ad\uc81c', unknown: '\ubbf8\ubd84\ub958', intro: '\uc778\ud2b8\ub85c', verse: '\ubc8c\uc2a4',
+    prechorus: '\ud504\ub9ac\ucf54\ub7ec\uc2a4', chorus: '\ucf54\ub7ec\uc2a4', bridge: '\ube0c\ub9ac\uc9c0', outro: '\uc544\uc6c3\ud2b8\ub85c', instrumental: '\uac04\uc8fc', select: '\uc601\uc0c1 \uc120\ud0dd',
+    mismatch: '\ucd9c\ub825 \uc124\uc815\uc774 \ubcc0\uacbd\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud504\ub808\uc784\ub960\uacfc \ud06c\uae30\ub97c \ub9de\ucd94\ub824\uba74 MV \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\ub97c \ub2e4\uc2dc \ub9cc\ub4dc\uc138\uc694.',
+    confirmProposal: 'AI \uc81c\uc548 \ud30c\uc77c\uc774 \uc788\uc2b5\ub2c8\ub2e4. \uac80\ud1a0\ub97c \uc704\ud574 \ubd88\ub7ec\uc62c\uae4c\uc694? \uc800\uc7a5\ud558\uae30 \uc804\uae4c\uc9c0 \uc2b9\uc778\ub41c \ud0c0\uc784\ub77c\uc778\uc740 \ubc14\ub00c\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.', needApproval: '\ub808\uc774\uc5b4\ub97c \ub0b4\ubcf4\ub0b4\uae30 \uc804\uc5d0 \ud0c0\uc784\ub77c\uc778\uc744 \uac80\ud1a0\ud558\uace0 \uc2b9\uc778\ud558\uc138\uc694.',
+    removeVideo: '\uc774 \uc601\uc0c1 \uc81c\uac70', usedVideo: '\uc774 \uc601\uc0c1\uc740 \uc0f7\uc5d0 \ud560\ub2f9\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4. \uc81c\uac70\ud558\uae30 \uc804\uc5d0 \ud574\ub2f9 \uc0f7\uc744 \ub2e4\ub978 \uc601\uc0c1\uc73c\ub85c \uc9c0\uc815\ud558\uc138\uc694.',
+    badSource: '\uc120\ud0dd\ud55c \uc81c\uc548\uc758 \ubbf8\ub514\uc5b4 \ub610\ub294 \ucd9c\ub825 \uc124\uc815\uc774 \uc774 \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\uc640 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.', partialLayers: '\ub808\uc774\uc5b4 \ub0b4\ubcf4\ub0b4\uae30\uac00 \uc644\ub8cc\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \ub80c\ub354\ub9c1 \uc804\uc5d0 \ud22c\uba85 \ub808\uc774\uc5b4\ub97c \ub2e4\uc2dc \ub0b4\ubcf4\ub0b4\uc138\uc694.',
+    badAudio: '\ubd88\ub7ec\uc628 \uace1\uc774 \uc774 MV \ud504\ub85c\uc81d\ud2b8\uc640 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4. \ub2e4\ub978 \uace1\uc744 \uc4f0\ub824\uba74 \ud504\ub85c\uc81d\ud2b8 \ud3f4\ub354\ub97c \ub2e4\uc2dc \ub9cc\ub4dc\uc138\uc694.',
+  },
+  id: {
+    noAudio: 'Impor lagu sebelum membuat proyek MV.', noVideo: 'Tambahkan setidaknya satu video latar eksternal.',
+    noFolderApi: 'Akses folder memerlukan Chrome atau Edge pada halaman aman (HTTPS atau localhost).', noProject: 'Buat atau buka folder proyek MV terlebih dahulu.',
+    created: 'Folder proyek MV dibuat:', opened: 'Proyek MV dibuka:', proposal: 'Saran AI dimuat. Tinjau bagian dan shot, lalu setujui timeline.',
+    approved: 'Timeline disetujui dan disimpan. Ekspor layer transparan, lalu jalankan perintah FFmpeg lokal.',
+    layerDone: 'Layer transparan disimpan ke folder proyek.', invalid: 'Pemeriksaan timeline gagal:', folderRead: 'Folder proyek MV tidak dapat dibuka:',
+    chooseVideo: 'Pilih klip video eksternal', chooseFolder: 'Buka folder proyek MV', createFolder: 'Buat folder proyek MV',
+    sections: 'Bagian lagu', shots: 'Shot latar', start: 'Frame mulai', end: 'Frame akhir', type: 'Bagian', style: 'Gaya',
+    confidence: 'Keyakinan AI', lock: 'Kunci', asset: 'File video', sourceIn: 'Awal sumber (dtk)', sourceOut: 'Akhir sumber (dtk)',
+    description: 'Saran shot', addShot: 'Tambah shot', removeShot: 'Hapus', unknown: 'Belum diklasifikasi', intro: 'Intro', verse: 'Verse',
+    prechorus: 'Pra-refrain', chorus: 'Refrain', bridge: 'Bridge', outro: 'Outro', instrumental: 'Instrumental', select: 'Pilih video',
+    mismatch: 'Pengaturan output berubah. Buat ulang folder proyek MV agar frame rate dan dimensinya sesuai.',
+    confirmProposal: 'Saran AI tersedia. Muat untuk ditinjau? Timeline yang disetujui tidak berubah sebelum disimpan.', needApproval: 'Tinjau dan setujui timeline sebelum mengekspor layer.',
+    removeVideo: 'Hapus video ini', usedVideo: 'Video ini digunakan oleh shot. Ganti video pada shot tersebut sebelum menghapusnya.',
+    badSource: 'Aset atau pengaturan output pada saran ini tidak cocok dengan folder proyek.', partialLayers: 'Ekspor layer belum lengkap. Ekspor ulang layer transparan sebelum rendering.',
+    badAudio: 'Lagu yang dimuat tidak cocok dengan proyek MV ini. Buat ulang folder proyek untuk memakai lagu lain.',
+  },
+  vi: {
+    noAudio: 'H\u00e3y nh\u1eadp b\u00e0i h\u00e1t tr\u01b0\u1edbc khi t\u1ea1o d\u1ef1 \u00e1n MV.', noVideo: 'Th\u00eam \u00edt nh\u1ea5t m\u1ed9t video n\u1ec1n \u0111\u01b0\u1ee3c t\u1ea1o b\u00ean ngo\u00e0i.',
+    noFolderApi: 'Truy c\u1eadp th\u01b0 m\u1ee5c c\u1ea7n Chrome ho\u1eb7c Edge tr\u00ean trang an to\u00e0n (HTTPS ho\u1eb7c localhost).', noProject: 'Tr\u01b0\u1edbc ti\u00ean h\u00e3y t\u1ea1o ho\u1eb7c m\u1edf th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV.',
+    created: '\u0110\u00e3 t\u1ea1o th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV:', opened: '\u0110\u00e3 m\u1edf d\u1ef1 \u00e1n MV:', proposal: '\u0110\u00e3 t\u1ea3i \u0111\u1ec1 xu\u1ea5t AI. H\u00e3y xem l\u1ea1i c\u00e1c \u0111o\u1ea1n v\u00e0 c\u1ea3nh quay r\u1ed3i duy\u1ec7t.',
+    approved: '\u0110\u00e3 duy\u1ec7t v\u00e0 l\u01b0u d\u00f2ng th\u1eddi gian. H\u00e3y xu\u1ea5t l\u1edbp trong su\u1ed1t r\u1ed3i ch\u1ea1y l\u1ec7nh FFmpeg c\u1ee5c b\u1ed9.',
+    layerDone: '\u0110\u00e3 l\u01b0u l\u1edbp trong su\u1ed1t v\u00e0o th\u01b0 m\u1ee5c d\u1ef1 \u00e1n.', invalid: 'Ki\u1ec3m tra d\u00f2ng th\u1eddi gian th\u1ea5t b\u1ea1i:', folderRead: 'Kh\u00f4ng th\u1ec3 m\u1edf th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV:',
+    chooseVideo: 'Ch\u1ecdn video t\u1ea1o b\u00ean ngo\u00e0i', chooseFolder: 'M\u1edf th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV', createFolder: 'T\u1ea1o th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV',
+    sections: '\u0110o\u1ea1n nh\u1ea1c', shots: 'C\u1ea3nh n\u1ec1n', start: 'Khung h\u00ecnh b\u1eaft \u0111\u1ea7u', end: 'Khung h\u00ecnh k\u1ebft th\u00fac', type: '\u0110o\u1ea1n', style: 'Phong c\u00e1ch',
+    confidence: '\u0110\u1ed9 tin c\u1eady AI', lock: 'Kh\u00f3a', asset: 'T\u1ec7p video', sourceIn: '\u0110i\u1ec3m v\u00e0o ngu\u1ed3n (gi\u00e2y)', sourceOut: '\u0110i\u1ec3m ra ngu\u1ed3n (gi\u00e2y)',
+    description: '\u0110\u1ec1 xu\u1ea5t c\u1ea3nh quay', addShot: 'Th\u00eam c\u1ea3nh', removeShot: 'X\u00f3a', unknown: 'Ch\u01b0a ph\u00e2n lo\u1ea1i', intro: 'M\u1edf \u0111\u1ea7u', verse: '\u0110o\u1ea1n',
+    prechorus: 'Ti\u1ec1n \u0111i\u1ec7p kh\u00fac', chorus: '\u0110i\u1ec7p kh\u00fac', bridge: 'Chuy\u1ec3n \u0111o\u1ea1n', outro: 'K\u1ebft th\u00fac', instrumental: 'Kh\u00f4ng l\u1eddi', select: 'Ch\u1ecdn video',
+    mismatch: 'C\u00e0i \u0111\u1eb7t \u0111\u1ea7u ra \u0111\u00e3 thay \u0111\u1ed5i. H\u00e3y t\u1ea1o l\u1ea1i th\u01b0 m\u1ee5c d\u1ef1 \u00e1n MV \u0111\u1ec3 \u0111\u1ed3ng b\u1ed9 t\u1ed1c \u0111\u1ed9 khung h\u00ecnh v\u00e0 k\u00edch th\u01b0\u1edbc.',
+    confirmProposal: 'C\u00f3 \u0111\u1ec1 xu\u1ea5t AI. T\u1ea3i \u0111\u1ec3 xem l\u1ea1i? D\u00f2ng th\u1eddi gian \u0111\u00e3 duy\u1ec7t s\u1ebd kh\u00f4ng \u0111\u1ed5i cho \u0111\u1ebfn khi b\u1ea1n l\u01b0u.', needApproval: 'H\u00e3y xem v\u00e0 duy\u1ec7t d\u00f2ng th\u1eddi gian tr\u01b0\u1edbc khi xu\u1ea5t l\u1edbp.',
+    removeVideo: 'X\u00f3a video n\u00e0y', usedVideo: 'Video \u0111ang \u0111\u01b0\u1ee3c d\u00f9ng trong m\u1ed9t c\u1ea3nh. H\u00e3y \u0111\u1ed5i video c\u1ee7a c\u1ea3nh \u0111\u00f3 tr\u01b0\u1edbc khi x\u00f3a.',
+    badSource: 'T\u00e0i nguy\u00ean ho\u1eb7c c\u00e0i \u0111\u1eb7t \u0111\u1ea7u ra trong \u0111\u1ec1 xu\u1ea5t kh\u00f4ng kh\u1edbp v\u1edbi th\u01b0 m\u1ee5c d\u1ef1 \u00e1n n\u00e0y.', partialLayers: 'Xu\u1ea5t l\u1edbp ch\u01b0a ho\u00e0n t\u1ea5t. H\u00e3y xu\u1ea5t l\u1ea1i c\u00e1c l\u1edbp trong su\u1ed1t tr\u01b0\u1edbc khi k\u1ebft xu\u1ea5t.',
+    badAudio: 'B\u00e0i h\u00e1t \u0111\u00e3 t\u1ea3i kh\u00f4ng kh\u1edbp v\u1edbi d\u1ef1 \u00e1n MV n\u00e0y. H\u00e3y t\u1ea1o l\u1ea1i th\u01b0 m\u1ee5c d\u1ef1 \u00e1n n\u1ebfu mu\u1ed1n d\u00f9ng b\u00e0i kh\u00e1c.',
+  },
+};
+Object.assign(MV_COPY.en, {
+  unsafePath: 'Asset path must be a safe relative path.', noProjectName: 'Could not find an available project folder name.',
+  videoLimit: 'The maximum number of video assets has been reached.', badVideoDuration: 'Some video durations could not be read. Check the source out points for those shots.',
+  missingAsset: 'Asset is missing:', noAudioAsset: 'The timeline has no song asset.', audioAnalysis: 'The song could not be loaded or analyzed.',
+  transition: 'Transition into section', noneTransition: 'None',
+});
+Object.assign(MV_COPY['zh-Hant'], {
+  unsafePath: '\u7d20\u6750\u8def\u5f91\u5fc5\u9808\u662f\u5b89\u5168\u7684\u76f8\u5c0d\u8def\u5f91\u3002',
+  noProjectName: '\u627e\u4e0d\u5230\u53ef\u7528\u7684\u5c08\u6848\u8cc7\u6599\u593e\u540d\u7a31\u3002',
+  videoLimit: '\u5f71\u7247\u7d20\u6750\u6578\u91cf\u5df2\u9054\u4e0a\u9650\u3002',
+  badVideoDuration: '\u90e8\u5206\u5f71\u7247\u7121\u6cd5\u8b80\u53d6\u9577\u5ea6\uff1b\u8acb\u6aa2\u67e5\u5c0d\u61c9\u93e1\u982d\u7684\u4f86\u6e90\u51fa\u9ede\u3002',
+  missingAsset: '\u627e\u4e0d\u5230\u7d20\u6750\uff1a', noAudioAsset: '\u6642\u9593\u8ef8\u6c92\u6709\u6b4c\u66f2\u7d20\u6750\u3002',
+  audioAnalysis: '\u6b4c\u66f2\u7121\u6cd5\u8f09\u5165\u6216\u5206\u6790\u3002',
+  transition: '\u9032\u5165\u6bb5\u843d\u7684\u8f49\u5834', noneTransition: '\u7121',
+});
+Object.assign(MV_COPY.ja, { transition: '\u30bb\u30af\u30b7\u30e7\u30f3\u958b\u59cb\u6642\u306e\u30c8\u30e9\u30f3\u30b8\u30b7\u30e7\u30f3', noneTransition: '\u306a\u3057' });
+Object.assign(MV_COPY['zh-Hans'], { transition: '\u8fdb\u5165\u6bb5\u843d\u7684\u8f6c\u573a', noneTransition: '\u65e0' });
+function mvText(key) {
+  const raw = document.documentElement.lang || 'en';
+  const lang = raw.startsWith('zh-Hant') ? 'zh-Hant' : raw.startsWith('zh-Hans') ? 'zh-Hans' : raw.split('-')[0];
+  return (MV_COPY[lang] || MV_COPY.en)[key] || MV_COPY.en[key] || key;
+}
+function mvStatus(message, bad = false) { const el = $('mvStatus'); if (!el) return; el.textContent = message || ''; el.classList.toggle('error', !!bad); }
+function safeMVPath(path) {
+  if (typeof path !== 'string' || !path || path.startsWith('/') || path.includes('\\') || path.split('/').some(p => !p || p === '.' || p === '..')) throw new Error(mvText('unsafePath'));
+  return path.split('/');
+}
+async function mvDirectoryAt(root, path, create = false) {
+  const parts = safeMVPath(path); let dir = root;
+  for (const part of parts) dir = await dir.getDirectoryHandle(part, { create });
+  return dir;
+}
+async function mvFileAt(root, path) {
+  const parts = safeMVPath(path); const fileName = parts.pop(); let dir = root;
+  for (const part of parts) dir = await dir.getDirectoryHandle(part);
+  return dir.getFileHandle(fileName);
+}
+async function mvWrite(root, path, data) {
+  const parts = safeMVPath(path); const fileName = parts.pop();
+  const dir = parts.length ? await mvDirectoryAt(root, parts.join('/'), true) : root;
+  const file = await dir.getFileHandle(fileName, { create: true }); const writable = await file.createWritable();
+  try { await writable.write(data instanceof Blob ? data : new Blob([data])); await writable.close(); }
+  catch (error) { try { await writable.abort(); } catch (_) {} throw error; }
+}
+async function saveMVManifest() {
+  if (!S.mvProjectDir || !S.mvTimeline) return;
+  let manifest = {};
+  try { manifest = JSON.parse(await (await mvRead(S.mvProjectDir, 'manifest.json')).text()); }
+  catch (error) { if (error.name !== 'NotFoundError') throw error; }
+  Object.assign(manifest, { schemaVersion: 1, app: 'JIZURA', appVersion: S.plan && S.plan.appVersion && !String(S.plan.appVersion).startsWith('@') ? S.plan.appVersion : manifest.appVersion || 'dev',
+    projectFolder: S.mvProjectName || S.mvProjectDir.name || '', timeline: 'timeline.json', assets: S.mvTimeline.assets.map(item => item.path) });
+  await mvWrite(S.mvProjectDir, 'manifest.json', JSON.stringify(manifest, null, 2) + '\n');
+}
+async function mvCopyFile(root, path, source) {
+  const parts = safeMVPath(path); const fileName = parts.pop();
+  const dir = parts.length ? await mvDirectoryAt(root, parts.join('/'), true) : root;
+  const target = await dir.getFileHandle(fileName, { create: true });
+  await source.stream().pipeTo(await target.createWritable());
+}
+async function mvRead(root, path) { return (await mvFileAt(root, path)).getFile(); }
+async function mvUniqueProjectDir(parent, baseName) {
+  let name = `${baseName}-mv`;
+  for (let i = 1; i < 1000; i++) {
+    try { await parent.getDirectoryHandle(name); name = `${baseName}-mv-${i + 1}`; }
+    catch (error) { if (error.name !== 'NotFoundError') throw error; return { handle: await parent.getDirectoryHandle(name, { create: true }), name }; }
+  }
+  throw new Error(mvText('noProjectName'));
+}
+async function videoMetadata(file) {
+  return new Promise(resolve => {
+    const video = document.createElement('video'), url = URL.createObjectURL(file);
+    video.preload = 'metadata';
+    const done = value => { URL.revokeObjectURL(url); video.removeAttribute('src'); video.load(); resolve(value); };
+    video.onloadedmetadata = () => done({ duration: Number.isFinite(video.duration) ? video.duration : 0, width: video.videoWidth || 0, height: video.videoHeight || 0 });
+    video.onerror = () => done({ duration: 0, width: 0, height: 0 });
+    video.src = url;
+  });
+}
+function renderMVVideoList() {
+  const list = $('mvVideoList'); if (!list) return;
+  list.replaceChildren();
+  for (const [i, item] of S.mvVideos.entries()) {
+    const row = document.createElement('div'); row.className = 'mv-file-row';
+    const name = document.createElement('span'); name.textContent = `${i + 1}. ${item.file.name} · ${item.duration ? J.fmtTime(item.duration) : '—'}`;
+    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'ghost small'; remove.textContent = '×'; remove.setAttribute('aria-label', mvText('removeVideo'));
+    remove.addEventListener('click', async () => {
+      const videoId = item.id;
+      if (S.mvTimeline && S.mvTimeline.shots.some(shot => shot.assetId === videoId)) { mvStatus(mvText('usedVideo'), true); return; }
+      S.mvVideos.splice(i, 1);
+      if (S.mvTimeline) {
+        S.mvTimeline.assets = S.mvTimeline.assets.filter(asset => asset.id !== videoId); S.mvTimeline.approved = false;
+        S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' });
+        try {
+          if (S.mvProjectDir) {
+            await mvWrite(S.mvProjectDir, 'timeline.json', JSON.stringify(S.mvTimeline, null, 2) + '\n');
+            await saveMVManifest();
+          }
+        }
+        catch (error) { mvStatus(error.message || String(error), true); }
+      }
+      renderMVVideoList(); renderMVTimeline();
+    });
+    row.append(name, remove); list.appendChild(row);
+  }
+}
+function nextMVVideoId(extra = []) {
+  const used = new Set([...(S.mvTimeline?.assets || []).map(asset => asset.id), ...S.mvVideos.map(item => item.id), ...extra]);
+  for (let i = 1; i < 10000; i++) { const id = `video-${String(i).padStart(3, '0')}`; if (!used.has(id)) return id; }
+  throw new Error(mvText('videoLimit'));
+}
+async function addMVVideoFiles(files) {
+  const next = [];
+  for (const file of files) {
+    const meta = await videoMetadata(file);
+    next.push({ id: nextMVVideoId(next.map(item => item.id)), file, ...meta });
+  }
+  for (const video of next) {
+    if (S.mvTimeline) {
+      const asset = { id: video.id, kind: 'video', path: `assets/video/${video.id}-${J.MVTimeline.safeName(video.file.name)}`,
+        name: video.file.name, size: video.file.size || 0, lastModified: video.file.lastModified || 0, mediaType: video.file.type || '', durationUs: Math.round(video.duration * 1e6), width: video.width, height: video.height };
+      if (S.mvTimeline.assets.some(item => item.id === asset.id)) asset.id = nextMVVideoId();
+      asset.path = `assets/video/${asset.id}-${J.MVTimeline.safeName(video.file.name)}`; video.id = asset.id;
+      if (S.mvProjectDir) await mvCopyFile(S.mvProjectDir, asset.path, video.file);
+      S.mvTimeline.assets.push(asset); S.mvTimeline.approved = false; S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' });
+      if (S.mvProjectDir) await mvWrite(S.mvProjectDir, 'timeline.json', JSON.stringify(S.mvTimeline, null, 2) + '\n');
+    }
+    S.mvVideos.push(video);
+  }
+  if (S.mvProjectDir && S.mvTimeline) await saveMVManifest();
+  renderMVVideoList(); renderMVTimeline();
+  if (next.some(item => !item.duration)) mvStatus(mvText('badVideoDuration'), true);
+}
+function mvCatalog() {
+  return {
+    schemaVersion: 1,
+    styles: J.STYLE_ORDER.map(id => ({ id, name: J.STYLES[id].name, description: J.STYLES[id].desc })),
+    transitions: J.order('trans').map(id => ({ id, name: (J.TRANS[id] && J.TRANS[id].name) || id })),
+  };
+}
+function validateMV(timeline, requireShots = false) {
+  const result = J.MVTimeline.validate(timeline, { requireShots });
+  if (!result.valid) mvStatus(mvText('invalid') + '\n• ' + result.errors.join('\n• '), true);
+  return result.valid;
+}
+function stableMVValue(value) {
+  return Array.isArray(value) ? value.map(stableMVValue) : value && typeof value === 'object'
+    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stableMVValue(value[key])])) : value;
+}
+function sameMVSource(proposal, saved) {
+  if (!proposal || !saved || proposal.schemaVersion !== 1 || saved.schemaVersion !== 1) return false;
+  const fields = ['schemaVersion', 'project', 'assets', 'audio', 'beats', 'audioFeatures', 'lyrics', 'shots'];
+  return fields.every(key => JSON.stringify(stableMVValue(proposal[key])) === JSON.stringify(stableMVValue(saved[key])));
+}
+function namedMVFile(file, asset) {
+  return new File([file], asset.name || file.name, { type: asset.mediaType || file.type || '', lastModified: asset.lastModified || file.lastModified || Date.now() });
+}
+function renderMVTimeline() {
+  const box = $('mvTimelineReview'); if (!box) return;
+  const timeline = S.mvTimeline;
+  if (!timeline) { box.innerHTML = ''; return; }
+  const styleBySection = new Map((timeline.styles || []).map(item => [item.sectionId, item.styleId]));
+  const types = ['intro', 'verse', 'pre-chorus', 'chorus', 'bridge', 'instrumental', 'outro', 'unknown'];
+  const sections = (timeline.sections || []).map((section, i) => {
+    const locked = !!section.locked;
+    const sectionStartDisabled = locked || i === 0 || !!timeline.sections[i - 1]?.locked;
+    const sectionEndDisabled = locked || i === timeline.sections.length - 1 || !!timeline.sections[i + 1]?.locked;
+    const typeOptions = types.map(type => `<option value="${type}"${type === section.type ? ' selected' : ''}>${mvText(type === 'pre-chorus' ? 'prechorus' : type)}</option>`).join('');
+    const styleOptions = J.STYLE_ORDER.map(id => `<option value="${id}"${styleBySection.get(section.id) === id ? ' selected' : ''}>${escapeHtml(J.STYLES[id].name)} · ${id}</option>`).join('');
+    const boundaryTransition = (timeline.transitions || []).find(item => item.atFrame === section.startFrame);
+    const transitionOptions = [`<option value="none"${!boundaryTransition ? ' selected' : ''}>${mvText('noneTransition')}</option>`, ...J.order('trans').map(id => `<option value="${id}"${boundaryTransition && boundaryTransition.transitionId === id ? ' selected' : ''}>${escapeHtml((J.TRANS[id] && J.TRANS[id].name) || id)} · ${id}</option>`)].join('');
+    const confidence = section.confidence == null ? '—' : `${Math.round(section.confidence * 100)}%`;
+    return `<div class="mv-grid-row mv-section-row" data-section="${i}"><span class="mv-row-id">${escapeHtml(section.id)}</span><label>${mvText('type')}<select data-section-field="type"${locked ? ' disabled' : ''}>${typeOptions}</select></label><label>${mvText('start')}<input data-section-field="startFrame" type="number" min="0" max="${timeline.project.durationFrames}" value="${section.startFrame}"${sectionStartDisabled ? ' disabled' : ''}></label><label>${mvText('end')}<input data-section-field="endFrame" type="number" min="1" max="${timeline.project.durationFrames}" value="${section.endFrame}"${sectionEndDisabled ? ' disabled' : ''}></label><label>${mvText('style')}<select data-section-field="styleId"${locked ? ' disabled' : ''}>${styleOptions}</select></label><label>${mvText('transition')}<select data-section-field="transitionId"${locked || i === 0 ? ' disabled' : ''}>${transitionOptions}</select></label><label>${mvText('confidence')}<span class="mv-readonly">${confidence}</span></label><label>${mvText('description')}<input data-section-field="shotDescription" type="text" value="${escapeHtml(section.shotDescription || '')}"${locked ? ' disabled' : ''}></label><label class="mv-lock"><input data-section-field="locked" type="checkbox"${section.locked ? ' checked' : ''}>${mvText('lock')}</label></div>`;
+  }).join('');
+  const videoAssets = (timeline.assets || []).filter(asset => asset.kind === 'video');
+  const shots = (timeline.shots || []).map((shot, i) => {
+    const assetOptions = [`<option value="">${mvText('select')}</option>`, ...videoAssets.map(asset => `<option value="${escapeHtml(asset.id)}"${asset.id === shot.assetId ? ' selected' : ''}>${escapeHtml(asset.name || asset.id)}</option>`)].join('');
+    const start = shot.sourceInUs == null ? 0 : (shot.sourceInUs / 1e6).toFixed(2);
+    const end = shot.sourceOutUs == null ? 0 : (shot.sourceOutUs / 1e6).toFixed(2);
+    return `<div class="mv-grid-row mv-shot-row" data-shot="${i}"><span class="mv-row-id">${escapeHtml(shot.id || `shot-${i + 1}`)}</span><label>${mvText('start')}<input data-shot-field="startFrame" type="number" min="0" max="${timeline.project.durationFrames}" value="${shot.startFrame}"${i === 0 ? ' disabled' : ''}></label><label>${mvText('end')}<input data-shot-field="endFrame" type="number" min="1" max="${timeline.project.durationFrames}" value="${shot.endFrame}"${i === timeline.shots.length - 1 ? ' disabled' : ''}></label><label>${mvText('asset')}<select data-shot-field="assetId">${assetOptions}</select></label><label>${mvText('sourceIn')}<input data-shot-field="sourceIn" type="number" min="0" step="0.1" value="${start}"></label><label>${mvText('sourceOut')}<input data-shot-field="sourceOut" type="number" min="0.1" step="0.1" value="${end}"></label><label>${mvText('description')}<input data-shot-field="description" type="text" value="${escapeHtml(shot.description || '')}"></label><button type="button" class="ghost small" data-remove-shot="${i}">${mvText('removeShot')}</button></div>`;
+  }).join('');
+  box.innerHTML = `<h4>${mvText('sections')}</h4><div class="mv-grid-scroll"><div class="mv-grid mv-sections">${sections || '<p class="muted">—</p>'}</div></div><h4>${mvText('shots')}</h4><div class="mv-grid-scroll"><div class="mv-grid mv-shots">${shots || '<p class="muted">—</p>'}</div></div><button type="button" id="mvAddShot" class="ghost small">${mvText('addShot')}</button>`;
+  const add = $('mvAddShot'); if (add) add.addEventListener('click', addMVShot);
+  box.querySelectorAll('[data-remove-shot]').forEach(button => button.addEventListener('click', () => removeMVShot(+button.dataset.removeShot)));
+}
+function updateMVSection(index, field, value) {
+  if (!S.mvTimeline) return;
+  const list = S.mvTimeline.sections, section = list[index]; if (!section) return;
+  if (field === 'type') section.type = value;
+  else if (field === 'locked') section.locked = !!value;
+  else if (field === 'shotDescription') section.shotDescription = value;
+  else if (field === 'transitionId') {
+    if (section.locked || index === 0) return;
+    S.mvTimeline.transitions = (S.mvTimeline.transitions || []).filter(item => item.atFrame !== section.startFrame);
+    if (value !== 'none' && J.TRANS[value]) S.mvTimeline.transitions.push({ atFrame: section.startFrame, transitionId: value, durationFrames: Math.max(1, Math.round(0.35 * S.mvTimeline.project.fps)) });
+  }
+  else if (field === 'styleId') {
+    const item = S.mvTimeline.styles.find(style => style.sectionId === section.id);
+    if (item) item.styleId = value; else S.mvTimeline.styles.push({ sectionId: section.id, styleId: value });
+  } else {
+    if (field === 'startFrame' && (section.locked || (index > 0 && list[index - 1].locked))) return;
+    if (field === 'endFrame' && (section.locked || (index < list.length - 1 && list[index + 1].locked))) return;
+    if ((field === 'startFrame' && index === 0) || (field === 'endFrame' && index === list.length - 1)) return;
+    const min = field === 'startFrame' ? (index > 0 ? list[index - 1].startFrame + 1 : 0) : section.startFrame + 1;
+    const max = field === 'startFrame' ? section.endFrame - 1 : (index < list.length - 1 ? list[index + 1].endFrame - 1 : S.mvTimeline.project.durationFrames);
+    const frame = Math.max(min, Math.min(max, Math.round(+value || 0)));
+    const oldBoundary = field === 'startFrame' ? section.startFrame : section.endFrame;
+    section[field] = frame;
+    if (field === 'startFrame' && index > 0) list[index - 1].endFrame = frame;
+    if (field === 'endFrame' && index < list.length - 1) list[index + 1].startFrame = frame;
+    if ((field === 'startFrame' && index > 0) || (field === 'endFrame' && index < list.length - 1)) moveMVTransition(oldBoundary, frame);
+  }
+  S.mvTimeline.approved = false; S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' }); replan(); renderMVTimeline();
+}
+function updateMVShot(index, field, value) {
+  if (!S.mvTimeline) return;
+  const list = S.mvTimeline.shots, shot = list[index]; if (!shot) return;
+  if (field === 'assetId' || field === 'description') shot[field] = value;
+  else if (field === 'sourceIn') shot.sourceInUs = Math.max(0, Math.round((+value || 0) * 1e6));
+  else if (field === 'sourceOut') shot.sourceOutUs = Math.max(0, Math.round((+value || 0) * 1e6));
+  else {
+    if ((field === 'startFrame' && index === 0) || (field === 'endFrame' && index === list.length - 1)) return;
+    const min = field === 'startFrame' ? (index > 0 ? list[index - 1].startFrame + 1 : 0) : shot.startFrame + 1;
+    const max = field === 'startFrame' ? shot.endFrame - 1 : (index < list.length - 1 ? list[index + 1].endFrame - 1 : S.mvTimeline.project.durationFrames);
+    const frame = Math.max(min, Math.min(max, Math.round(+value || 0)));
+    const oldBoundary = field === 'startFrame' ? shot.startFrame : shot.endFrame;
+    shot[field] = frame;
+    if (field === 'startFrame' && index > 0) list[index - 1].endFrame = frame;
+    if (field === 'endFrame' && index < list.length - 1) list[index + 1].startFrame = frame;
+    if ((field === 'startFrame' && index > 0) || (field === 'endFrame' && index < list.length - 1)) moveMVTransition(oldBoundary, frame);
+  }
+  S.mvTimeline.approved = false; S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' }); replan(); renderMVTimeline();
+}
+function moveMVTransition(fromFrame, toFrame) {
+  const transitions = S.mvTimeline && S.mvTimeline.transitions;
+  if (!Array.isArray(transitions) || fromFrame === toFrame) return;
+  const index = transitions.findIndex(transition => transition.atFrame === fromFrame);
+  if (index < 0) return;
+  if (transitions.some((transition, i) => i !== index && transition.atFrame === toFrame)) transitions.splice(index, 1);
+  else transitions[index].atFrame = toFrame;
+}
+function addMVShot() {
+  if (!S.mvTimeline || !S.mvTimeline.shots.length) { mvStatus(mvText('noVideo'), true); return; }
+  const list = S.mvTimeline.shots; let index = 0, longest = -1;
+  list.forEach((item, i) => { const span = item.endFrame - item.startFrame; if (span > longest) { longest = span; index = i; } });
+  if (longest < 2) { mvStatus(''); return; }
+  const source = list[index], originalStart = source.startFrame, originalEnd = source.endFrame;
+  const mid = originalStart + Math.floor(longest / 2), sourceMid = Math.round(source.sourceInUs + (source.sourceOutUs - source.sourceInUs) * (mid - originalStart) / longest);
+  const used = new Set(list.map(item => item.id)); let id = '', serial = 1;
+  while (!id || used.has(id)) { id = `shot-${String(serial++).padStart(3, '0')}`; }
+  const next = Object.assign({}, source, { id, startFrame: mid, sourceInUs: sourceMid });
+  source.endFrame = mid; source.sourceOutUs = sourceMid;
+  next.endFrame = originalEnd;
+  list.splice(index + 1, 0, next); S.mvTimeline.approved = false; S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' }); renderMVTimeline();
+}
+function removeMVShot(index) {
+  if (!S.mvTimeline || S.mvTimeline.shots.length < 2) return;
+  const shots = S.mvTimeline.shots, removed = shots[index];
+  S.mvTimeline.transitions = (S.mvTimeline.transitions || []).filter(item => item.atFrame !== removed.startFrame && !(index === 0 && item.atFrame === removed.endFrame));
+  if (index > 0) shots[index - 1].endFrame = removed.endFrame;
+  else shots[1].startFrame = removed.startFrame;
+  shots.splice(index, 1); S.mvTimeline.approved = false; S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing' }); renderMVTimeline();
+}
+async function createMVProjectFolder() {
+  if (!window.showDirectoryPicker) throw new Error(mvText('noFolderApi'));
+  const audioFile = S.audioFile || (J.loadSong ? await J.loadSong() : null);
+  if (!audioFile || !S.audio) throw new Error(mvText('noAudio'));
+  if (!S.mvVideos.length) throw new Error(mvText('noVideo'));
+  const parent = await window.showDirectoryPicker({ mode: 'readwrite' });
+  const baseName = J.MVTimeline.safeName(S.project.title || 'jizura');
+  const created = await mvUniqueProjectDir(parent, baseName), dir = created.handle;
+  const timeline = J.MVTimeline.create({ project: S.project, plan: S.plan, audio: S.audio, audioFile, videos: S.mvVideos });
+  timeline.editorProject = JSON.parse(JSON.stringify(S.project));
+  for (const asset of timeline.assets) {
+    const source = asset.kind === 'audio' ? audioFile : S.mvVideos.find(item => item.id === asset.id)?.file;
+    if (!source) throw new Error(`${mvText('missingAsset')} ${asset.name || asset.id}`);
+    await mvCopyFile(dir, asset.path, source);
+  }
+  await mvWrite(dir, 'timeline.json', JSON.stringify(timeline, null, 2) + '\n');
+  await mvWrite(dir, 'catalog.json', JSON.stringify(mvCatalog(), null, 2) + '\n');
+  await mvWrite(dir, 'manifest.json', JSON.stringify({ schemaVersion: 1, app: 'JIZURA', appVersion: S.plan.appVersion && !String(S.plan.appVersion).startsWith('@') ? S.plan.appVersion : 'dev', projectFolder: created.name, timeline: 'timeline.json', assets: timeline.assets.map(item => item.path) }, null, 2) + '\n');
+  const guide = 'JIZURA MV \u5c08\u6848\uff08MV Timeline v1\uff09\n\n'
+    + '1. \u5148\u6aa2\u67e5\u7d20\u6750\u8207\u6642\u9593\u8ef8\uff1apython3 tools/mv_engine.py validate /\u5c08\u6848\u8cc7\u6599\u593e\u5b8c\u6574\u8def\u5f91\n'
+    + '2. AI \u5efa\u8b70\u6703\u50b3\u9001\u6b4c\u8a5e\u8207\u672c\u6a5f\u97f3\u6a02\u7279\u5fb5\u81f3 OpenAI\uff1b\u78ba\u8a8d\u540c\u610f\u5f8c\u518d\u57f7\u884c\uff1a\n'
+    + '   python3 tools/mv_engine.py ai-plan /\u5c08\u6848\u8cc7\u6599\u593e\u5b8c\u6574\u8def\u5f91 --consent-lyrics-features\n'
+    + '3. \u56de\u5230 JIZURA\uff0c\u958b\u555f\u6b64\u5c08\u6848\u8cc7\u6599\u593e\u4e26\u5be9\u6838 timeline.proposed.json\uff0c\u518d\u6838\u51c6\u5132\u5b58\u3002\n'
+    + '4. \u8f38\u51fa\u900f\u660e\u5716\u5c64\u5f8c\uff0c\u57f7\u884c\uff1apython3 tools/mv_engine.py render /\u5c08\u6848\u8cc7\u6599\u593e\u5b8c\u6574\u8def\u5f91 --approved\n'
+    + '5. \u91d1\u9470\u8acb\u7528 python3 tools/mv_engine.py keychain-set \u5b58\u5165 macOS Keychain\uff1b\u672c\u5de5\u5177\u4e0d\u6703\u81ea\u52d5\u4e0b\u8f09\u6216\u5b89\u88dd FFmpeg\u3002\n';
+  await mvWrite(dir, 'README-MV.txt', guide);
+  S.audioFile = audioFile; S.mvTimeline = timeline; S.mvProjectDir = dir; S.mvProjectName = created.name;
+  renderMVTimeline(); replan();
+  mvStatus(`${mvText('created')} ${created.name}`);
+}
+async function openMVProjectFolder() {
+  if (!window.showDirectoryPicker) throw new Error(mvText('noFolderApi'));
+  const dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+  const saved = JSON.parse(await (await mvRead(dir, 'timeline.json')).text());
+  let timeline = saved;
+  let proposalFile = null;
+  try {
+    proposalFile = await mvRead(dir, 'timeline.proposed.json');
+  } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+  if (proposalFile) {
+    const proposal = JSON.parse(await proposalFile.text());
+    const proposalIsNewer = !saved.approved || !saved.approvedAt || Date.parse(proposal.suggestedAt || '') > Date.parse(saved.approvedAt || '');
+    if (!proposal.approved && proposalIsNewer && window.confirm(mvText('confirmProposal'))) {
+      if (!sameMVSource(proposal, saved)) throw new Error(mvText('badSource'));
+      timeline = proposal;
+    }
+  }
+  const result = J.MVTimeline.validate(timeline);
+  if (!result.valid) throw new Error(result.errors.join('；'));
+  S.mvTimeline = timeline; S.mvProjectDir = dir; S.mvProjectName = dir.name || '';
+  S.project = mergeProject(timeline.editorProject || Object.assign(J.defaultProject(), { title: timeline.project.title || '', aspect: timeline.project.aspect || '16:9', res: timeline.project.resolution || 1080, fps: timeline.project.fps }));
+  const videos = [];
+  for (const asset of timeline.assets.filter(item => item.kind === 'video')) {
+    const file = namedMVFile(await mvRead(dir, asset.path), asset);
+    videos.push({ id: asset.id, file, duration: (asset.durationUs || 0) / 1e6, width: asset.width || 0, height: asset.height || 0 });
+  }
+  S.mvVideos = videos; renderMVVideoList(); syncUI();
+  const audioAsset = timeline.audio && timeline.assets.find(item => item.id === timeline.audio.assetId);
+  if (!audioAsset) throw new Error(mvText('noAudioAsset'));
+  const audioFile = namedMVFile(await mvRead(dir, audioAsset.path), audioAsset);
+  const loaded = await loadAudioFile(audioFile, true);
+  if (!loaded) throw new Error(mvText('audioAnalysis'));
+  S.mvTimeline = timeline; S.mvProjectDir = dir; S.mvProjectName = dir.name || '';
+  renderMVTimeline(); replan(); mvStatus(`${mvText('opened')} ${S.mvProjectName}`);
+}
+async function loadMVProposal(file) {
+  if (!S.mvProjectDir || !S.mvTimeline) throw new Error(mvText('noProject'));
+  const timeline = JSON.parse(await file.text());
+  const result = J.MVTimeline.validate(timeline);
+  if (!result.valid) throw new Error(result.errors.join('；'));
+  const saved = JSON.parse(await (await mvRead(S.mvProjectDir, 'timeline.json')).text());
+  if (!sameMVSource(timeline, saved)) throw new Error(mvText('badSource'));
+  S.mvTimeline = timeline; S.mvTimeline.approved = false;
+  if (timeline.editorProject) S.project = mergeProject(timeline.editorProject);
+  syncUI(); renderMVTimeline(); replan(); mvStatus(mvText('proposal'));
+}
+async function approveMVTimeline() {
+  if (!S.mvProjectDir || !S.mvTimeline) throw new Error(mvText('noProject'));
+  const [width, height] = J.outputSize(S.project), frames = Math.ceil(S.plan.duration * S.plan.fps);
+  if (S.mvTimeline.project.fps !== S.plan.fps || S.mvTimeline.project.width !== width || S.mvTimeline.project.height !== height || S.mvTimeline.project.durationFrames !== frames) throw new Error(mvText('mismatch'));
+  const audioAsset = S.mvTimeline.assets.find(asset => S.mvTimeline.audio && asset.id === S.mvTimeline.audio.assetId);
+  if (!audioAsset || !S.audioFile || (audioAsset.name && audioAsset.name !== S.audioFile.name) || (audioAsset.size && audioAsset.size !== S.audioFile.size)
+      || (audioAsset.lastModified && audioAsset.lastModified !== S.audioFile.lastModified)
+      || (S.mvTimeline.audio.durationUs > 0 && Math.abs(S.mvTimeline.audio.durationUs - S.audio.duration * 1e6) > 1_000_000)) throw new Error(mvText('badAudio'));
+  J.MVTimeline.refreshFromEditor(S.mvTimeline, S.project, S.plan, S.audio);
+  S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'missing', frameCount: frames });
+  S.mvTimeline.approved = true; S.mvTimeline.approvedAt = new Date().toISOString();
+  if (!validateMV(S.mvTimeline, true)) { S.mvTimeline.approved = false; return; }
+  await mvWrite(S.mvProjectDir, 'timeline.json', JSON.stringify(S.mvTimeline, null, 2) + '\n');
+  replan(); mvStatus(mvText('approved'));
+}
+async function exportMVLayers() {
+  if (!S.mvProjectDir || !S.mvTimeline) throw new Error(mvText('noProject'));
+  if (!S.mvTimeline.approved) throw new Error(mvText('needApproval'));
+  if (!validateMV(S.mvTimeline, true)) return;
+  pause(); const ac = new AbortController(); S.exporting = ac;
+  const boxes = [...document.querySelectorAll('.exp-box')]; boxes.forEach(box => { box.hidden = false; box.querySelector('.exp-bar').style.width = '0%'; });
+  const onProgress = (p, message) => boxes.forEach(box => { box.querySelector('.exp-bar').style.width = `${(p * 100).toFixed(1)}%`; box.querySelector('.exp-text').textContent = message; });
+  try {
+    S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { layersStatus: 'exporting' });
+    await mvWrite(S.mvProjectDir, 'timeline.json', JSON.stringify(S.mvTimeline, null, 2) + '\n');
+    await J.ensureFonts(S.project.lyrics + (S.project.title || ''), J.fontsOfPlan(S.plan));
+    const result = await J.exportPNGDirectory({ plan: S.plan, project: S.project, directory: S.mvProjectDir, onProgress, signal: ac.signal });
+    S.mvTimeline.render = Object.assign({}, S.mvTimeline.render, { backPattern: result.backPattern, frontPattern: result.frontPattern, frameCount: result.frames, layersStatus: 'complete' });
+    await mvWrite(S.mvProjectDir, 'timeline.json', JSON.stringify(S.mvTimeline, null, 2) + '\n');
+    mvStatus(mvText('layerDone'));
+  } finally { S.exporting = null; }
 }
 
 /* ---------------- かんたんモードの案内ツアー ---------------- */
@@ -37639,6 +38268,213 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 J.ui = S;
 // hooks for hosts that embed the app (the After Effects CEP panel)
 J.uiApi = { toast, replan, syncUI, pause, seek, flushSave, loadAudioFile, restartPreview, exportRange, exportRangeLines };
+})();
+
+/* ============================================================
+   JIZURA — MV Timeline v1、專案資料夾與格式驗證
+   ============================================================ */
+(() => {
+'use strict';
+
+const VERSION = 1;
+const clone = value => JSON.parse(JSON.stringify(value));
+const frameOf = (seconds, fps) => Math.max(0, Math.round(seconds * fps));
+const safeName = value => String(value || 'asset').normalize('NFKC').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, 100) || 'asset';
+const idOf = (kind, i) => `${kind}-${String(i + 1).padStart(3, '0')}`;
+
+function create({ project, plan, audio, audioFile, videos = [] }) {
+  const fps = plan.fps || project.fps || 24;
+  const [width, height] = J.outputSize(project);
+  const durationFrames = Math.max(1, Math.ceil(plan.duration * fps));
+  const assets = [];
+  let audioAssetId = null;
+  if (audioFile) {
+    audioAssetId = 'audio-001';
+    assets.push({ id: audioAssetId, kind: 'audio', path: `assets/audio/${audioAssetId}-${safeName(audioFile.name)}`, name: audioFile.name, size: audioFile.size || 0, lastModified: audioFile.lastModified || 0, mediaType: audioFile.type || '' });
+  }
+  const videoAssets = videos.map((v, i) => {
+    const id = v.id || idOf('video', i);
+    const asset = { id, kind: 'video', path: `assets/video/${id}-${safeName(v.file.name)}`, name: v.file.name, size: v.file.size || 0, lastModified: v.file.lastModified || 0, mediaType: v.file.type || '',
+      durationUs: Math.max(0, Math.round((v.duration || 0) * 1e6)), width: v.width || 0, height: v.height || 0 };
+    assets.push(asset);
+    return asset;
+  });
+  const sections = [{ id: 'section-001', type: 'unknown', startFrame: 0, endFrame: durationFrames, confidence: null, locked: false }];
+  const styles = [{ sectionId: sections[0].id, styleId: project.style || 'noir' }];
+  const shots = videoAssets.length ? [{ id: 'shot-001', assetId: videoAssets[0].id, startFrame: 0, endFrame: durationFrames,
+    sourceInUs: 0, sourceOutUs: videoAssets[0].durationUs || Math.round(plan.duration * 1e6), fit: 'cover', description: '' }] : [];
+  const beats = (plan.beats || []).map((seconds, i) => ({ frame: frameOf(seconds, fps), strength: null, id: `beat-${i + 1}` }))
+    .filter((beat, i, all) => beat.frame < durationFrames && (!i || beat.frame > all[i - 1].frame));
+  const lines = (plan.lines || []).filter(line => !line.interlude && line.text).map(line => ({
+    id: `lyric-${line.index + 1}`, lineIndex: line.index, text: String(line.text), startFrame: frameOf(line.start, fps),
+    endFrame: Math.min(durationFrames, Math.max(frameOf(line.start, fps) + 1, frameOf(line.visEnd || line.end, fps))),
+  }));
+  const energy = [];
+  if (audio && audio.energy && audio.energyRate) {
+    const count = Math.min(600, audio.energy.length);
+    for (let i = 0; i < count; i++) {
+      const at = Math.round(i * (audio.energy.length - 1) / Math.max(1, count - 1));
+      energy.push({ frame: frameOf(at / audio.energyRate, fps), value: +Math.max(0, Math.min(1, audio.energy[at])).toFixed(4) });
+    }
+  }
+  const transitionMap = new Map();
+  for (const cut of (plan.cuts || [])) if (cut.trans && J.TRANS && J.TRANS[cut.trans]) {
+    const atFrame = frameOf(cut.start, fps);
+    transitionMap.set(atFrame, { atFrame, transitionId: cut.trans, durationFrames: Math.max(1, frameOf(cut.transDur || 0.35, fps)) });
+  }
+  const transitions = [...transitionMap.values()];
+  return {
+    schemaVersion: VERSION,
+    approved: false,
+    project: { title: String(project.title || ''), artist: String(project.artist || ''), width, height, fps, durationFrames,
+      aspect: project.aspect || '16:9', resolution: project.res || 1080 },
+    editorProject: clone(project),
+    assets,
+    audio: audioAssetId ? { assetId: audioAssetId, durationUs: Math.round((audio && audio.duration || plan.duration) * 1e6) } : null,
+    beats,
+    audioFeatures: { bpm: audio && Number.isFinite(audio.bpm) ? audio.bpm : null, energyRateHz: audio && audio.energyRate || 0, energy },
+    sections,
+    lyrics: lines,
+    shots,
+    styles,
+    transitions,
+    render: { backPattern: 'render/mg/back/frame_%06d.png', frontPattern: 'render/mg/front/frame_%06d.png', frameCount: durationFrames, layersStatus: 'missing' },
+  };
+}
+
+function validate(timeline, { requireShots = false } = {}) {
+  const errors = [];
+  const fail = message => errors.push(message);
+  if (!timeline || typeof timeline !== 'object' || Array.isArray(timeline)) return { valid: false, errors: ['時間軸必須是 JSON 物件'] };
+  if (timeline.schemaVersion !== VERSION) fail(`不支援的時間軸版本：${timeline.schemaVersion}`);
+  const p = timeline.project || {};
+  if (!Number.isInteger(p.fps) || ![24, 30, 60].includes(p.fps)) fail('project.fps 必須是 24、30 或 60');
+  if (!Number.isInteger(p.width) || p.width < 2 || !Number.isInteger(p.height) || p.height < 2) fail('project.width／height 必須是正整數');
+  if (!Number.isInteger(p.durationFrames) || p.durationFrames < 1) fail('project.durationFrames 必須大於 0');
+  const total = Number.isInteger(p.durationFrames) ? p.durationFrames : 0;
+  const ids = new Set(), byId = new Map();
+  if (!Array.isArray(timeline.assets)) fail('assets 必須是陣列');
+  else for (const asset of timeline.assets) {
+    if (!asset || typeof asset.id !== 'string' || !asset.id || ids.has(asset.id)) fail('素材 id 必須存在且不可重複');
+    else { ids.add(asset.id); byId.set(asset.id, asset); }
+    if (!asset || !['audio', 'video'].includes(asset.kind)) fail(`素材 ${asset && asset.id || '?'} 的 kind 無效`);
+    const path = asset && asset.path;
+    if (typeof path !== 'string' || !path || path.startsWith('/') || path.includes('\\') || path.split('/').some(part => !part || part === '.' || part === '..')) fail(`素材 ${asset && asset.id || '?'} 的路徑必須是安全的相對路徑`);
+  }
+  if (!timeline.audio || !byId.has(timeline.audio.assetId) || byId.get(timeline.audio.assetId).kind !== 'audio') fail('audio.assetId 必須指向一個音訊素材');
+  const styles = new Map();
+  if (!Array.isArray(timeline.styles)) fail('styles 必須是陣列');
+  else for (const style of timeline.styles) {
+    if (!style || !J.STYLES[style.styleId]) fail(`未知的 Style：${style && style.styleId || '?'}`);
+    if (style && typeof style.sectionId !== 'string') fail('Style 必須指定 sectionId');
+    else if (style && styles.has(style.sectionId)) fail(`段落 ${style.sectionId} 重複指定 Style`);
+    else if (style) styles.set(style.sectionId, style.styleId);
+  }
+  const declaredSectionIds = new Set((Array.isArray(timeline.sections) ? timeline.sections : []).filter(section => section && typeof section.id === 'string').map(section => section.id));
+  for (const sectionId of styles.keys()) if (!declaredSectionIds.has(sectionId)) fail(`Style 引用了不存在的段落：${sectionId}`);
+  if (!Array.isArray(timeline.sections) || !timeline.sections.length) fail('sections 必須至少有一個段落');
+  else {
+    const sectionIds = new Set();
+    const sorted = timeline.sections.slice().sort((a, b) => (Number.isInteger(a && a.startFrame) ? a.startFrame : -1) - (Number.isInteger(b && b.startFrame) ? b.startFrame : -1));
+    let cursor = 0;
+    for (const section of sorted) {
+      if (!section || typeof section.id !== 'string' || !section.id || sectionIds.has(section.id)) fail('段落 id 必須存在且不可重複');
+      else sectionIds.add(section.id);
+      if (!section || !['intro', 'verse', 'pre-chorus', 'chorus', 'bridge', 'outro', 'instrumental', 'unknown'].includes(section.type)) fail(`段落類型無效：${section && section.type || '?'}`);
+      if (!section || !Number.isInteger(section.startFrame) || !Number.isInteger(section.endFrame) || section.startFrame !== cursor || section.endFrame <= section.startFrame || section.endFrame > total) fail('sections 必須不重疊並連續覆蓋完整歌曲');
+      if (section && section.confidence !== null && (!Number.isFinite(section.confidence) || section.confidence < 0 || section.confidence > 1)) fail(`段落 ${section.id || '?'} 的 confidence 必須介於 0 與 1`);
+      if (section && typeof section.locked !== 'boolean') fail(`段落 ${section.id || '?'} 必須有 locked 布林值`);
+      if (section && !styles.has(section.id)) fail(`段落 ${section.id || '?'} 缺少 Style`);
+      if (section && section.endFrame > cursor) cursor = section.endFrame;
+    }
+    if (cursor !== total) fail('sections 的最後一格必須等於 project.durationFrames');
+  }
+  if (!Array.isArray(timeline.lyrics)) fail('lyrics 必須是陣列');
+  else for (const lyric of timeline.lyrics) if (!lyric || typeof lyric.text !== 'string' || !Number.isInteger(lyric.startFrame) || !Number.isInteger(lyric.endFrame) || lyric.startFrame < 0 || lyric.endFrame <= lyric.startFrame || lyric.endFrame > total) fail(`歌詞 ${lyric && lyric.id || '?'} 的影格範圍無效`);
+  if (!Array.isArray(timeline.beats)) fail('beats 必須是陣列');
+  else {
+    let previous = -1;
+    for (const beat of timeline.beats) {
+      if (!beat || !Number.isInteger(beat.frame) || beat.frame < 0 || beat.frame >= total || beat.frame <= previous) fail('beats 必須依影格遞增且位於歌曲範圍內');
+      if (beat && beat.strength !== null && (!Number.isFinite(beat.strength) || beat.strength < 0 || beat.strength > 1)) fail('beat strength 必須介於 0 與 1');
+      if (beat && Number.isInteger(beat.frame)) previous = beat.frame;
+    }
+  }
+  if (!Array.isArray(timeline.shots)) fail('shots 必須是陣列');
+  else {
+    const sorted = timeline.shots.slice().sort((a, b) => (Number.isInteger(a && a.startFrame) ? a.startFrame : -1) - (Number.isInteger(b && b.startFrame) ? b.startFrame : -1));
+    const shotIds = new Set();
+    let cursor = 0;
+    for (const shot of sorted) {
+      const asset = shot && byId.get(shot.assetId);
+      if (!shot || !asset || asset.kind !== 'video') fail(`鏡頭 ${shot && shot.id || '?'} 必須引用影片素材`);
+      if (!shot || typeof shot.id !== 'string' || !shot.id || shotIds.has(shot.id)) fail('鏡頭 id 必須存在且不可重複'); else shotIds.add(shot.id);
+      if (!shot || !Number.isInteger(shot.startFrame) || !Number.isInteger(shot.endFrame) || shot.startFrame !== cursor || shot.endFrame <= shot.startFrame || shot.endFrame > total) fail('shots 必須不重疊並連續覆蓋完整歌曲');
+      if (shot && (!Number.isSafeInteger(shot.sourceInUs) || !Number.isSafeInteger(shot.sourceOutUs) || shot.sourceInUs < 0 || shot.sourceOutUs <= shot.sourceInUs)) fail(`鏡頭 ${shot && shot.id || '?'} 的來源裁切時間無效`);
+      if (shot && asset && asset.durationUs > 0 && shot.sourceOutUs > asset.durationUs + Math.round(1e6 / (p.fps || 24))) fail(`鏡頭 ${shot.id || '?'} 的來源出點超出影片長度`);
+      if (shot && shot.endFrame > cursor) cursor = shot.endFrame;
+    }
+    if (requireShots && (!sorted.length || cursor !== total)) fail('合成前需要影片鏡頭完整覆蓋歌曲');
+  }
+  if (!Array.isArray(timeline.transitions)) fail('transitions 必須是陣列');
+  else {
+    const transitionFrames = new Set();
+    for (const tr of timeline.transitions) {
+      if (!tr || !Number.isInteger(tr.atFrame) || tr.atFrame < 0 || tr.atFrame >= total || !Number.isInteger(tr.durationFrames) || tr.durationFrames < 1 || tr.durationFrames > (p.fps || 24) * 10 || !J.TRANS[tr.transitionId]) fail(`轉場設定無效：${tr && tr.transitionId || '?'}`);
+      else if (transitionFrames.has(tr.atFrame)) fail(`影格 ${tr.atFrame} 重複指定轉場`);
+      else transitionFrames.add(tr.atFrame);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+function attachToPlan(plan, project, timeline) {
+  if (!timeline || !Array.isArray(timeline.sections)) return plan;
+  const fps = plan.fps || 24;
+  const styleBySection = new Map((timeline.styles || []).map(item => [item.sectionId, item.styleId]));
+  const styleMap = {};
+  for (const section of timeline.sections) {
+    const id = styleBySection.get(section.id);
+    if (id && J.STYLES[id] && !styleMap[id]) styleMap[id] = J.resolveStyle(Object.assign({}, project, { style: id }));
+  }
+  plan.mvTimeline = timeline;
+  plan.mvStyleTracks = timeline.sections.map(section => ({ startFrame: section.startFrame, endFrame: section.endFrame, styleId: styleBySection.get(section.id) || project.style || 'noir' }));
+  plan.mvStyleMap = styleMap;
+  for (const transition of timeline.transitions || []) {
+    const at = transition.atFrame / fps;
+    const cut = plan.cuts.find(item => Math.abs(item.start - at) < 0.5 / fps);
+    if (cut && J.TRANS[transition.transitionId]) { cut.trans = transition.transitionId; cut.transDur = transition.durationFrames / fps; }
+  }
+  return plan;
+}
+
+function refreshFromEditor(timeline, project, plan, audio) {
+  const fps = plan.fps || project.fps || 24;
+  const [width, height] = J.outputSize(project);
+  const durationFrames = Math.max(1, Math.ceil(plan.duration * fps));
+  timeline.project = Object.assign({}, timeline.project, { title: String(project.title || ''), artist: String(project.artist || ''), width, height, fps, durationFrames,
+    aspect: project.aspect || '16:9', resolution: project.res || 1080 });
+  timeline.editorProject = clone(project);
+  timeline.beats = (plan.beats || []).map((seconds, i) => ({ frame: frameOf(seconds, fps), strength: null, id: `beat-${i + 1}` }))
+    .filter((beat, i, all) => beat.frame < durationFrames && (!i || beat.frame > all[i - 1].frame));
+  timeline.lyrics = (plan.lines || []).filter(line => !line.interlude && line.text).map(line => ({
+    id: `lyric-${line.index + 1}`, lineIndex: line.index, text: String(line.text), startFrame: frameOf(line.start, fps),
+    endFrame: Math.min(durationFrames, Math.max(frameOf(line.start, fps) + 1, frameOf(line.visEnd || line.end, fps))),
+  }));
+  const energy = [];
+  if (audio && audio.energy && audio.energyRate) {
+    const count = Math.min(600, audio.energy.length);
+    for (let i = 0; i < count; i++) {
+      const at = Math.round(i * (audio.energy.length - 1) / Math.max(1, count - 1));
+      energy.push({ frame: frameOf(at / audio.energyRate, fps), value: +Math.max(0, Math.min(1, audio.energy[at])).toFixed(4) });
+    }
+  }
+  timeline.audioFeatures = { bpm: audio && Number.isFinite(audio.bpm) ? audio.bpm : null, energyRateHz: audio && audio.energyRate || 0, energy };
+  if (timeline.audio) timeline.audio.durationUs = Math.round((audio && audio.duration || plan.duration) * 1e6);
+  return timeline;
+}
+
+J.MVTimeline = { version: VERSION, create, validate, attachToPlan, refreshFromEditor, safeName, frameOf };
 })();
 
 </script>
